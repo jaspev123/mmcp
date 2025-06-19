@@ -19,4 +19,8 @@ github.com/modelcontextprotocol/servers
 sdk:
 https://github.com/modelcontextprotocol/typescript-sdk
 
+Tools:
+https://www.claudemcp.com/clients/claude-desktop
+https://blog.marcnuri.com/goose-on-machine-ai-agent-cli-introduction
+
 
