@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: ./PG
+    container_name: custom_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  timescaledb:
+    build:
+      context: ./timescale
+    container_name: custom_timescaledb
+    ports:
+      - "5433:5432" # Expose on 5433 outside, internal port remains 5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: timescaledb
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
+  timescale_data:
