@@ -1,0 +1,22 @@
+MCP into & Tools
+-------------------------------------------------
+spec:
+https://modelcontextprotocol.io/specification/2025-06-18
+
+https://www.youtube.com/watch?v=kQmXtrmQ5Zg
+
+https://blog.marcnuri.com/goose-on-machine-ai-agent-cli-introduction
+https://www.youtube.com/watch?v=FLpS7OfD5-s
+https://www.youtube.com/watch?v=tzrwxLNHtRY
+
+mcp-agent open source framework
+https://github.com/lastmile-ai/mcp-agent
+
+
+servers:
+github.com/modelcontextprotocol/servers
+
+sdk:
+https://github.com/modelcontextprotocol/typescript-sdk
+
+
