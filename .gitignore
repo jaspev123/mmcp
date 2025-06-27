@@ -1,6 +1,8 @@
 # Node modules
 node_modules/
 
+data.duckdb
+
 # Logs
 logs
 *.log
