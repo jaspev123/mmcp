@@ -83,7 +83,7 @@ export class MCPDuckDBAgent {
       console.log("Query results:", results);
 
       // Optional: Analyze query performance
-      await this.analyzeQueryPerformance(sql);
+     // await this.analyzeQueryPerformance(sql);
 
     } catch (error) {
       console.error('Error in callBedrock:', error);
@@ -92,14 +92,23 @@ export class MCPDuckDBAgent {
   }
 
   private async generateSQLWithLLM(schemaData: any[], question: string): Promise<string> {
-    const schemaText = JSON.stringify(schemaData, null, 2);
-    const prompt = this.getPrompt(schemaText, question);
+    const schemaText = JSON.stringify(schemaData, null, 2);    
+
+    const prompt2  = await this.mcpClient.getPrompt({
+      name: "sql-assistant",
+      arguments: {
+        question: question,
+        schema: schemaText
+      }
+    });
+    console.log("prompt2", prompt2);
+    prompt2.messages
 
     const messageBody = {
       messages: [
         {
           role: "user",
-          content: prompt,
+          content:  prompt2.messages[0].content.text,
         },
       ],
       anthropic_version: "bedrock-2023-05-31",
@@ -132,6 +141,7 @@ export class MCPDuckDBAgent {
     if (!this.isConnected) {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
+    console.log(" getSQLSuggestion:", question, context);
 
     try {
       // Use MCP tool to generate SQL suggestions
@@ -245,7 +255,7 @@ ${question}
 
 Requirements:
 - Return only the SQL statement, no explanations or formatting. return only the sql statement. 
-- Use proper DuckDB syntax and functions
+- Use proper DuckDB syntax and functions. " TO_VARCHAR" is not duckdb function
 - Ensure the query is safe and well-formed
 - Use the exact table_name and column_name from the schema provided
 - Consider performance implications

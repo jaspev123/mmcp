@@ -278,6 +278,9 @@ Requirements:
 - Use proper DuckDB syntax and functions
 - Ensure the query is safe and well-formed
 - Consider performance implications
+- TO_VARCHAR" is not duckdb function
+- TO_CHAR" is not duckdb function
+- columns with aggregate functions must appear in the group by clause
 
 `
       }

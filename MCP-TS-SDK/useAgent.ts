@@ -9,7 +9,7 @@ import MCPDuckDBAgent from './mcp-duckdb-client';
 
     // Ask natural language questions
     const result = await agent.callBedrock(
-      "return records having  monthly  max trip distance . give the months human readable names"
+      "return records having  monthly  max trip distance per passenger count. give the months human readable names"
     );
 
     console.log(result);
