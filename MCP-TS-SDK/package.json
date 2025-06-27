@@ -1,0 +1,41 @@
+{
+  "name": "mcp-ts-sdk",
+  "version": "1.0.0",
+  "description": "MCP-enabled DuckDB query application with AI agent",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "importdb": "tsx import-database-parquet.ts",
+    "start:server": "tsx mcp-duckdb-server",
+    "start:agent": "node dist/mcp-client-agent.js",
+    "dev": "tsx src/index.ts",
+    "dev:server": "tsx mcp-duckdb-server",
+    "dev:agent": "npx ts-node useAgent",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.x.x",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "duckdb-async": "^1.0.0",
+    "express": "^4.18.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "duckdb",
+    "bedrock",
+    "ai-agent",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
