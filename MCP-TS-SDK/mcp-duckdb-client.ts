@@ -62,7 +62,7 @@ export class MCPDuckDBAgent {
       // Generate SQL using LLM
       const sql = await this.generateSQLWithLLM(schemaData, question);
      
-
+      console.log("SQL generated:", sql);
       // Execute SQL using MCP
       const queryResult  = await this.mcpClient.callTool({
         name: "execute-sql",
@@ -78,7 +78,7 @@ export class MCPDuckDBAgent {
       }
 
       const content = queryResult.content as { text: string }[];
-const qryText = content[0].text;
+      const qryText = content[0].text;
       const results = JSON.parse(qryText);  
       console.log("Query results:", results);
 
@@ -180,6 +180,7 @@ const qryText = content[0].text;
     if (!this.isConnected) {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
+    console.log(" executeCustomSQL:", sql);
 
     try {
       const result = await this.mcpClient.callTool({
@@ -233,6 +234,7 @@ const qryText = content[0].text;
   }
 
   private getPrompt(schemaData: string, question: string): string {
+    console.log("getPrompt");
     return `
 I have a DuckDB database with the following schema:
 
@@ -242,7 +244,7 @@ Please generate a SQL query to answer this question:
 ${question}
 
 Requirements:
-- Return only the SQL statement, no explanations or formatting
+- Return only the SQL statement, no explanations or formatting. return only the sql statement. 
 - Use proper DuckDB syntax and functions
 - Ensure the query is safe and well-formed
 - Use the exact table_name and column_name from the schema provided

@@ -26,6 +26,7 @@ class DuckDBManager {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
+    console.log("SQL query:", sql);
 
     try {
       const result = await this.db.all(sql);
@@ -273,7 +274,7 @@ ${schema || 'Use the database-schema resource to get current schema'}
 Question: ${question}
 
 Requirements:
-- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print ${illegalSql} or any other formatting.
+- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting.
 - Use proper DuckDB syntax and functions
 - Ensure the query is safe and well-formed
 - Consider performance implications
@@ -315,7 +316,7 @@ Please provide:
 // Initialize and start the server
 async function main() {
   try {
-    console.log(" MCP lserver starts"); 
+    console.log(" MCP server starts"); 
     // Initialize DuckDB
     await duckDB.initialize('./database/data.duckdb');
     console.log('DuckDB initialized successfully');
