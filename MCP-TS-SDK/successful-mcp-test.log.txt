@@ -1,0 +1,463 @@
+
+
+➜  MCP-TS-SDK git:(main) ✗ npm run mcpagent
+
+> mcp-ts-sdk@1.0.0 mcpagent
+> npx ts-node runAgent-mcp
+
+Connected to MCP DuckDB server
+Initial prompt from MCP server:
+ [
+  {
+    role: 'user',
+    content: {
+      type: 'text',
+      text: 'You are a SQL expert.  Given the following database schema (if available)and Question, generate a valid DuckDB SQL query\n' +
+        '      Requirements:\n' +
+        '      - Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "```sql or any other formatting.\n' +
+        '      - Once you have generated the SQL query, respond in json format like this: {"contentType":"sql", "text": "the sql_query"} .\n' +
+        '      - Use proper DuckDB syntax and functions\n' +
+        '      - Ensure the query is safe and well-formed\n' +
+        '      - Consider performance implications\n' +
+        '      - TO_VARCHAR" is not duckdb function\n' +
+        '      - TO_CHAR" is not duckdb function\n' +
+        '      - columns with aggregate functions must appear in the group by clause\n' +
+        '      - DATE_FORMAT is not a duckdb function. use STRFTIME instead\n' +
+        '      - FORMAT_DATE is not a duckdb function. use STRFTIME instead\n' +
+        '      - Only include columns in SELECT that are either aggregated or listed in GROUP BY.\n' +
+        '       \n' +
+        '      Database Schema: undefined\n' +
+        '\n' +
+        '        Question: \n' +
+        '    list taxi trips that have the largest \n' +
+        '    trip distance for each month (also show the year in separate column). \n' +
+        "    format dates like like 'mm.dd.yyyy'.\n" +
+        '    give  months a human redable name    \n' +
+        '    \n' +
+        '\n' +
+        '        IF Database Schema above is undefined, then: \n' +
+        '\n' +
+        '        You must use tools, prompts and resources  to generate SQL query to answer the question. in the end of this message.\n' +
+        '\n' +
+        '        Requirements:\n' +
+        '        \n' +
+        '        - You must find the database schema and then generate a sql query to answer the question.\n' +
+        '        \n' +
+        '        \n' +
+        '        To find the database schema, respond with : {"contentType":"resource_call", "resource_uri": "duckdb://schema"}               \n' +
+        '  \n' +
+        '        - Once you have schema (in Database Schema section) , you must make only tool calls.\n' +
+        '   \n' +
+        '        - Once you have generated the SQL query, respond in format: {"contentType":"sql", "text": "the sql_query"} .\n' +
+        '\n' +
+        '        - Do not print any formatting or any other text. return only the sql statement or tool/resourece/prompt instructions.\n' +
+        '        - Allways answer in json formats as  described above. \n' +
+        '\n' +
+        '        Additional Context below helps find further actions to generate the sql query that satisfied the Question given in bottom.\n' +
+        '        if Additional Contex below has description like "use this  db-schema to generate query" , then it contains the database schema (inside resourceInfo) so you can generate the sql for the question below.\n' +
+        '        You can then call tool "execute-sql" to execute the sql query that you generate\n' +
+        '\n' +
+        '        Additional Context: undefined\n' +
+        '\n' +
+        '        \n' +
+        '\n' +
+        '        '
+    }
+  }
+]
+Initial Response from LLM:
+ {"contentType":"resource_call", "resource_uri": "duckdb://schema"}
+Type of initial response from LLM:
+ resource_call
+doMoreWorkWithLLM Counter:  0
+later llm Response.contentType:  resource_call
+Refined prompt from MCP server:
+ [
+  {
+    role: 'user',
+    content: {
+      type: 'text',
+      text: 'You are a SQL expert.  Given the following database schema (if available)and Question, generate a valid DuckDB SQL query\n' +
+        '      Requirements:\n' +
+        '      - Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "```sql or any other formatting.\n' +
+        '      - Once you have generated the SQL query, respond in json format like this: {"contentType":"sql", "text": "the sql_query"} .\n' +
+        '      - Use proper DuckDB syntax and functions\n' +
+        '      - Ensure the query is safe and well-formed\n' +
+        '      - Consider performance implications\n' +
+        '      - TO_VARCHAR" is not duckdb function\n' +
+        '      - TO_CHAR" is not duckdb function\n' +
+        '      - columns with aggregate functions must appear in the group by clause\n' +
+        '      - DATE_FORMAT is not a duckdb function. use STRFTIME instead\n' +
+        '      - FORMAT_DATE is not a duckdb function. use STRFTIME instead\n' +
+        '      - Only include columns in SELECT that are either aggregated or listed in GROUP BY.\n' +
+        '       \n' +
+        '      Database Schema: [\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "VendorID",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tpep_pickup_datetime",\n' +
+        '    "data_type": "TIMESTAMP",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tpep_dropoff_datetime",\n' +
+        '    "data_type": "TIMESTAMP",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "passenger_count",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "trip_distance",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "RatecodeID",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "store_and_fwd_flag",\n' +
+        '    "data_type": "VARCHAR",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "PULocationID",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "DOLocationID",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "payment_type",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "fare_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "extra",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "mta_tax",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tip_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tolls_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "improvement_surcharge",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "total_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "congestion_surcharge",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "airport_fee",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  }\n' +
+        ']\n' +
+        '\n' +
+        '        Question: \n' +
+        '    list taxi trips that have the largest \n' +
+        '    trip distance for each month (also show the year in separate column). \n' +
+        "    format dates like like 'mm.dd.yyyy'.\n" +
+        '    give  months a human redable name    \n' +
+        '    \n' +
+        '\n' +
+        '        IF Database Schema above is undefined, then: \n' +
+        '\n' +
+        '        You must use tools, prompts and resources  to generate SQL query to answer the question. in the end of this message.\n' +
+        '\n' +
+        '        Requirements:\n' +
+        '        \n' +
+        '        - You must find the database schema and then generate a sql query to answer the question.\n' +
+        '        \n' +
+        '        \n' +
+        '        To find the database schema, respond with : {"contentType":"resource_call", "resource_uri": "duckdb://schema"}               \n' +
+        '  \n' +
+        '        - Once you have schema (in Database Schema section) , you must make only tool calls.\n' +
+        '   \n' +
+        '        - Once you have generated the SQL query, respond in format: {"contentType":"sql", "text": "the sql_query"} .\n' +
+        '\n' +
+        '        - Do not print any formatting or any other text. return only the sql statement or tool/resourece/prompt instructions.\n' +
+        '        - Allways answer in json formats as  described above. \n' +
+        '\n' +
+        '        Additional Context below helps find further actions to generate the sql query that satisfied the Question given in bottom.\n' +
+        '        if Additional Contex below has description like "use this  db-schema to generate query" , then it contains the database schema (inside resourceInfo) so you can generate the sql for the question below.\n' +
+        '        You can then call tool "execute-sql" to execute the sql query that you generate\n' +
+        '\n' +
+        '        Additional Context: {\n' +
+        '  "description": "use this  db-schema to generate query}"\n' +
+        '}\n' +
+        '\n' +
+        '        \n' +
+        '\n' +
+        '        '
+    }
+  }
+]
+loop Response from LLM:
+ {"contentType":"sql", "text": "WITH MonthlyMaxTrips AS (
+    SELECT
+        EXTRACT(YEAR FROM tpep_pickup_datetime) AS year,
+        EXTRACT(MONTH FROM tpep_pickup_datetime) AS month,
+        trip_distance,
+        tpep_pickup_datetime,
+        ROW_NUMBER() OVER (
+            PARTITION BY EXTRACT(YEAR FROM tpep_pickup_datetime), EXTRACT(MONTH FROM tpep_pickup_datetime)
+            ORDER BY trip_distance DESC
+        ) AS rank
+    FROM tripdata
+)
+SELECT
+    year,
+    CASE month
+        WHEN 1 THEN 'January'
+        WHEN 2 THEN 'February'
+        WHEN 3 THEN 'March'
+        WHEN 4 THEN 'April'
+        WHEN 5 THEN 'May'
+        WHEN 6 THEN 'June'
+        WHEN 7 THEN 'July'
+        WHEN 8 THEN 'August'
+        WHEN 9 THEN 'September'
+        WHEN 10 THEN 'October'
+        WHEN 11 THEN 'November'
+        WHEN 12 THEN 'December'
+    END AS month_name,
+    STRFTIME('%m.%d.%Y', tpep_pickup_datetime) AS formatted_date,
+    trip_distance
+FROM MonthlyMaxTrips
+WHERE rank = 1
+ORDER BY year, month"}
+Object response from LLM:
+ {
+  contentType: 'sql',
+  text: 'WITH MonthlyMaxTrips AS (\n' +
+    '    SELECT \n' +
+    '        EXTRACT(YEAR FROM tpep_pickup_datetime) AS year,\n' +
+    '        EXTRACT(MONTH FROM tpep_pickup_datetime) AS month,\n' +
+    '        trip_distance,\n' +
+    '        tpep_pickup_datetime,\n' +
+    '        ROW_NUMBER() OVER (\n' +
+    '            PARTITION BY EXTRACT(YEAR FROM tpep_pickup_datetime), EXTRACT(MONTH FROM tpep_pickup_datetime) \n' +
+    '            ORDER BY trip_distance DESC\n' +
+    '        ) AS rank\n' +
+    '    FROM tripdata\n' +
+    ')\n' +
+    'SELECT \n' +
+    '    year,\n' +
+    '    CASE month\n' +
+    "        WHEN 1 THEN 'January'\n" +
+    "        WHEN 2 THEN 'February'\n" +
+    "        WHEN 3 THEN 'March'\n" +
+    "        WHEN 4 THEN 'April'\n" +
+    "        WHEN 5 THEN 'May'\n" +
+    "        WHEN 6 THEN 'June'\n" +
+    "        WHEN 7 THEN 'July'\n" +
+    "        WHEN 8 THEN 'August'\n" +
+    "        WHEN 9 THEN 'September'\n" +
+    "        WHEN 10 THEN 'October'\n" +
+    "        WHEN 11 THEN 'November'\n" +
+    "        WHEN 12 THEN 'December'\n" +
+    '    END AS month_name,\n' +
+    "    STRFTIME('%m.%d.%Y', tpep_pickup_datetime) AS formatted_date,\n" +
+    '    trip_distance\n' +
+    'FROM MonthlyMaxTrips\n' +
+    'WHERE rank = 1\n' +
+    'ORDER BY year, month'
+}
+doMoreWorkWithLLM Counter:  1
+later llm Response.contentType:  sql
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+-----SQL query from LLM:
+ WITH MonthlyMaxTrips AS (
+    SELECT
+        EXTRACT(YEAR FROM tpep_pickup_datetime) AS year,
+        EXTRACT(MONTH FROM tpep_pickup_datetime) AS month,
+        trip_distance,
+        tpep_pickup_datetime,
+        ROW_NUMBER() OVER (
+            PARTITION BY EXTRACT(YEAR FROM tpep_pickup_datetime), EXTRACT(MONTH FROM tpep_pickup_datetime)
+            ORDER BY trip_distance DESC
+        ) AS rank
+    FROM tripdata
+)
+SELECT
+    year,
+    CASE month
+        WHEN 1 THEN 'January'
+        WHEN 2 THEN 'February'
+        WHEN 3 THEN 'March'
+        WHEN 4 THEN 'April'
+        WHEN 5 THEN 'May'
+        WHEN 6 THEN 'June'
+        WHEN 7 THEN 'July'
+        WHEN 8 THEN 'August'
+        WHEN 9 THEN 'September'
+        WHEN 10 THEN 'October'
+        WHEN 11 THEN 'November'
+        WHEN 12 THEN 'December'
+    END AS month_name,
+    STRFTIME('%m.%d.%Y', tpep_pickup_datetime) AS formatted_date,
+    trip_distance
+FROM MonthlyMaxTrips
+WHERE rank = 1
+ORDER BY year, month
+******* SQL query:
+ WITH MonthlyMaxTrips AS (
+    SELECT
+        EXTRACT(YEAR FROM tpep_pickup_datetime) AS year,
+        EXTRACT(MONTH FROM tpep_pickup_datetime) AS month,
+        trip_distance,
+        tpep_pickup_datetime,
+        ROW_NUMBER() OVER (
+            PARTITION BY EXTRACT(YEAR FROM tpep_pickup_datetime), EXTRACT(MONTH FROM tpep_pickup_datetime)
+            ORDER BY trip_distance DESC
+        ) AS rank
+    FROM tripdata
+)
+SELECT
+    year,
+    CASE month
+        WHEN 1 THEN 'January'
+        WHEN 2 THEN 'February'
+        WHEN 3 THEN 'March'
+        WHEN 4 THEN 'April'
+        WHEN 5 THEN 'May'
+        WHEN 6 THEN 'June'
+        WHEN 7 THEN 'July'
+        WHEN 8 THEN 'August'
+        WHEN 9 THEN 'September'
+        WHEN 10 THEN 'October'
+        WHEN 11 THEN 'November'
+        WHEN 12 THEN 'December'
+    END AS month_name,
+    STRFTIME('%m.%d.%Y', tpep_pickup_datetime) AS formatted_date,
+    trip_distance
+FROM MonthlyMaxTrips
+WHERE rank = 1
+ORDER BY year, month
+Query results from LLM generated SQL:
+
+ -----
+ [
+  {
+    year: 2008,
+    month_name: 'December',
+    formatted_date: '12.31.2008',
+    trip_distance: 18.5
+  },
+  {
+    year: 2009,
+    month_name: 'January',
+    formatted_date: '01.01.2009',
+    trip_distance: 16.71
+  },
+  {
+    year: 2021,
+    month_name: 'December',
+    formatted_date: '12.31.2021',
+    trip_distance: 21.13
+  },
+  {
+    year: 2022,
+    month_name: 'January',
+    formatted_date: '01.11.2022',
+    trip_distance: 306159.28
+  },
+  {
+    year: 2022,
+    month_name: 'February',
+    formatted_date: '02.01.2022',
+    trip_distance: 10.83
+  },
+  {
+    year: 2022,
+    month_name: 'March',
+    formatted_date: '03.09.2022',
+    trip_distance: 2.88
+  },
+  {
+    year: 2022,
+    month_name: 'April',
+    formatted_date: '04.06.2022',
+    trip_distance: 1.67
+  },
+  {
+    year: 2022,
+    month_name: 'May',
+    formatted_date: '05.18.2022',
+    trip_distance: 1.47
+  }
+] -----

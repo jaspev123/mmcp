@@ -1,4 +1,11 @@
+import fs from "fs";
+import path from "path";
 import duckdb from "duckdb";
+
+const dirPath = path.join(__dirname, "database");
+if (!fs.existsSync(dirPath)) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
 
 const db = new duckdb.Database("./database/data.duckdb");
 const con = db.connect();

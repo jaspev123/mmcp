@@ -3,6 +3,7 @@ import { TextDecoder } from "util";
 import { Buffer } from 'buffer';
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { callOllamaLLM, OllamaLLMResponse } from "./ollamaLLM";
 
 const modelId = "arn:aws:bedrock:eu-north-1:652477483543:inference-profile/eu.anthropic.claude-3-7-sonnet-20250219-v1:0";
 const bedrockClient = new BedrockRuntimeClient({ region: "eu-north-1" });
@@ -11,6 +12,7 @@ export class MCPDuckDBAgent {
   private mcpClient: Client;
   private mcpTransport: StdioClientTransport;
   private isConnected: boolean = false;
+  //private tools: Tool[] = [];
 
   constructor() {
     // Initialize MCP client
@@ -45,25 +47,37 @@ export class MCPDuckDBAgent {
     }
   }
 
-  async callBedrock(question: string): Promise<void> {
+  async callLLM(question: string,llmFunction: (q: string) => Promise<string>): Promise<string> {
     if (!this.isConnected) {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
-
     try {
-      // Get database schema using MCP
+      // Get database schema using MCP (client knows about the server)
       const schemaResource = await this.mcpClient.readResource({
+        name: "database-schema",
         uri: "duckdb://schema"
       });
-
       const schemaData = JSON.parse(schemaResource.contents[0].text +'' || '[]');
-      console.log("Schema data retrieved from MCP:", schemaData);
-
+      console.log("Schema data retrieved from MCP server:", schemaData);      
+      const schemaText = JSON.stringify(schemaData, null, 2);   
+      // get prompt to query the mnodel with
+      const promptFromServer  = await this.mcpClient.getPrompt({
+        name: "sql-assistant",
+        arguments: {
+          question: question,
+          schema: schemaText
+        }
+      });
+      console.log("prompt from MCP server: \n", promptFromServer.messages);  
       // Generate SQL using LLM
-      const sql = await this.generateSQLWithLLM(schemaData, question);
-     
-      console.log("SQL generated:", sql);
-      // Execute SQL using MCP
+      //const sql = await this.generateSQLWithBedrockLLM(promptFromServer.messages);     
+      // Extract text content from messages
+      const promptText: string = promptFromServer.messages
+        .map(msg => msg.content.text)
+        .join('\n');
+      const sql = await llmFunction(promptText);     
+      console.log("SQL generated from LLM:\n", sql);
+      // Execute SQL using a MCP tool (client knows about the server)
       const queryResult  = await this.mcpClient.callTool({
         name: "execute-sql",
         arguments: {
@@ -73,17 +87,15 @@ export class MCPDuckDBAgent {
       });
 
       if (queryResult.isError) {
-        console.error("SQL execution error:", queryResult + '');
-        return;
+        const content = queryResult.content as { text: string }[];
+        const errorText = content[0].text;
+        console.error("SQL execution error:", errorText);
+        return errorText;
       }
-
       const content = queryResult.content as { text: string }[];
       const qryText = content[0].text;
-      const results = JSON.parse(qryText);  
-      console.log("Query results:", results);
-
-      // Optional: Analyze query performance
-     // await this.analyzeQueryPerformance(sql);
+      const results = JSON.parse(qryText);        
+      return results;
 
     } catch (error) {
       console.error('Error in callBedrock:', error);
@@ -91,50 +103,27 @@ export class MCPDuckDBAgent {
     }
   }
 
-  private async generateSQLWithLLM(schemaData: any[], question: string): Promise<string> {
-    const schemaText = JSON.stringify(schemaData, null, 2);    
-
-    const prompt2  = await this.mcpClient.getPrompt({
-      name: "sql-assistant",
-      arguments: {
-        question: question,
-        schema: schemaText
-      }
-    });
-    console.log("prompt2", prompt2);
-    prompt2.messages
-
+   async generateSQLWithBedrockLLM(promptData : string): Promise<string> {
     const messageBody = {
       messages: [
         {
           role: "user",
-          content:  prompt2.messages[0].content.text,
+          content:  promptData,
         },
       ],
       anthropic_version: "bedrock-2023-05-31",
       max_tokens: 1000,
     };
-
-    return await this.modelCommandExecutor(messageBody);
+    return await this.bedrockModelCommandExecutor(messageBody);
   }
 
-  private async analyzeQueryPerformance(sql: string): Promise<void> {
-    try {
-      const analysisResult = await this.mcpClient.callTool({
-        name: "analyze-query",
-        arguments: {
-          sql: sql
-        }
-      });
-
-      if (!analysisResult.isError) {
-        const content = analysisResult.content as { text: string }[];
-        console.log("Query analysis:", content[0].text);
-      }
-    } catch (error) {
-      console.log("Query analysis not available or failed:", error);
-    }
+   async generateSQLWithOllamaLLM(promptData : string): Promise<string> {
+    const messageBody = promptData;
+    const result  : OllamaLLMResponse = await callOllamaLLM("llama3.2", messageBody); 
+    return result.response;
   }
+
+
 
   // Enhanced method to get suggestions from MCP server
   async getSQLSuggestion(question: string, context?: string): Promise<string> {
@@ -236,7 +225,7 @@ export class MCPDuckDBAgent {
         max_tokens: 1500,
       };
 
-      return await this.modelCommandExecutor(messageBody);
+      return await this.bedrockModelCommandExecutor(messageBody);
     } catch (error) {
       console.error('Error optimizing query:', error);
       throw error;
@@ -263,7 +252,7 @@ Requirements:
 SQL Query:`;
   }
 
-  private async modelCommandExecutor(body: Object): Promise<string> {
+  private async bedrockModelCommandExecutor(body: Object): Promise<string> {
     const command = new InvokeModelWithResponseStreamCommand({
       modelId,
       contentType: "application/json",
@@ -292,7 +281,7 @@ SQL Query:`;
   }
 
   // Method to list available MCP resources
-  async listAvailableResources(): Promise<any[]> {
+  async listAvailableMCPResources(): Promise<any[]> {
     if (!this.isConnected) {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
@@ -306,8 +295,8 @@ SQL Query:`;
     }
   }
 
-  // Method to list available MCP tools
-  async listAvailableTools(): Promise<any[]> {
+  
+  async listAvailableMCPTools(): Promise<any[]> {
     if (!this.isConnected) {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
@@ -322,7 +311,7 @@ SQL Query:`;
   }
 
   // Method to list available MCP prompts
-  async listAvailablePrompts(): Promise<any[]> {
+  async listAvailableMCPPrompts(): Promise<any[]> {
     if (!this.isConnected) {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
@@ -337,47 +326,5 @@ SQL Query:`;
   }
 }
 
-// Example usage
-async function main() {
-  const agent = new MCPDuckDBAgent();
-  
-  try {
-    await agent.initialize();
-    
-    // List available resources, tools, and prompts
-    console.log('Available resources:', await agent.listAvailableResources());
-    console.log('Available tools:', await agent.listAvailableTools());
-    console.log('Available prompts:', await agent.listAvailablePrompts());
-    
-    // Example queries
-    await agent.callBedrock("Show me all users created in the last 30 days");
-    
-    // Example of getting SQL suggestions
-    const suggestion = await agent.getSQLSuggestion(
-      "Find the top 10 customers by total order value",
-      "Focus on customers with orders in the current year"
-    );
-    console.log('SQL Suggestion:', suggestion);
-    
-    // Example of query optimization
-    const optimized = await agent.optimizeQuery(
-      "SELECT * FROM users WHERE created_at > '2024-01-01'",
-      "Query is running slowly on large dataset"
-    );
-    console.log('Optimized Query:', optimized);
-    
-  } catch (error) {
-    console.error('Error in main:', error);
-  } finally {
-    await agent.disconnect();
-  }
-}
-
-// Export the class and run example if this file is executed directly
 export default MCPDuckDBAgent;
 
-/*
-if (require.main === module) {
-  main().catch(console.error);
-}
-*/

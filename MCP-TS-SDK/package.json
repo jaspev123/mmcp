@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "MCP-enabled DuckDB query application with AI agent",
   "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
+  "scripts": {    
     "importdb": "tsx import-database-parquet.ts",
-    "start:server": "tsx mcp-duckdb-server",
-    "start:agent": "node dist/mcp-client-agent.js",
     "dev": "tsx src/index.ts",
-    "dev:server": "tsx mcp-duckdb-server",
-    "dev:agent": "npx ts-node useAgent",
+    "server": "tsx mcp-duckdb-server",
+    "agent": "npx ts-node runAgent",
+    "agent:ollama": "npx ts-node runAgent ollama",
+    "agent:mcp": "npx ts-node runAgent MCP",
+    "mcpagent": "npx ts-node runAgent-mcp",
+    "mcpagent:ollama": "npx ts-node runAgent-mcp ollama",
+    "mcpagent:mcp": "npx ts-node runAgent-mcp MCP",
+    
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -19,6 +21,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "duckdb-async": "^1.0.0",
     "express": "^4.18.0",
+    "node-fetch": "^3.3.2",
     "zod": "^3.22.0"
   },
   "devDependencies": {

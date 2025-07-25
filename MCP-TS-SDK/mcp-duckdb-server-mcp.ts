@@ -46,6 +46,19 @@ class DuckDBManager {
 }
 
 // Create the MCP server
+const requirements = `
+Requirements:
+- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print any formatting.
+- Use proper DuckDB syntax and functions
+- Ensure the query is safe and well-formed
+- Consider performance implications
+- TO_VARCHAR" is not duckdb function
+- TO_CHAR" is not duckdb function
+- columns with aggregate functions must appear in the group by clause
+- DATE_FORMAT is not a duckdb function. use STRFTIME instead
+- Only include columns in SELECT that are either aggregated or listed in GROUP BY.
+`;
+
 const server = new McpServer({
   name: "DuckDB Query Server",
   version: "1.0.0"
@@ -82,7 +95,8 @@ server.resource(
         contents: [{
           uri: uri.href,
           mimeType: "application/json",
-          text: JSON.stringify(schemaData, null, 2)
+          text: JSON.stringify(schemaData, null, 2),
+          description: "Database schema information"
         }]
       };
     } catch (error) {
@@ -97,39 +111,7 @@ server.resource(
   }
 );
 
-// Resource: Get table list
-server.resource(
-  "table-list",
-  "duckdb://tables",
-  async (uri) => {
-    try {
-      const tablesQuery = `
-        SELECT DISTINCT table_name
-        FROM information_schema.columns
-        WHERE table_schema = 'main'
-        ORDER BY table_name;
-      `;
 
-      const tables = await duckDB.query(tablesQuery);
-
-      return {
-        contents: [{
-          uri: uri.href,
-          mimeType: "application/json",
-          text: JSON.stringify(tables, null, 2)
-        }]
-      };
-    } catch (error) {
-      return {
-        contents: [{
-          uri: uri.href,
-          mimeType: "text/plain",
-          text: `Error retrieving tables: ${error}`
-        }]
-      };
-    }
-  }
-);
 
 function extractSQL(rawText : string) {
   return rawText
@@ -188,82 +170,7 @@ server.tool(
   }
 );
 
-// Tool: Generate SQL from natural language
-server.tool(
-  "generate-sql",
-  {
-    question: z.string().describe("Natural language question to convert to SQL"),
-    context: z.string().optional().describe("Additional context about the query")
-  },
-  async ({ question, context }) => {
-    try {
-      // Get schema information
-      const schemaQuery = `
-        SELECT
-          table_name,
-          column_name,
-          data_type
-        FROM
-          information_schema.columns
-        WHERE
-          table_schema = 'main'
-        ORDER BY
-          table_name,
-          ordinal_position;
-      `;
 
-      const schemaData = await duckDB.query(schemaQuery);
-      const schemaText = JSON.stringify(schemaData, null, 2);
-
-      // Return the schema and question for the LLM to process
-      return {
-        content: [{
-          type: "text",
-          text: `Schema Information:\n${schemaText}\n\nQuestion: ${question}\n\nContext: ${context || 'None'}\n\nPlease generate a SQL query based on this information.`
-        }],
-        isError: false
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Error generating SQL: ${error}`
-        }],
-        isError: true
-      };
-    }
-  }
-);
-
-// Tool: Analyze query performance
-server.tool(
-  "analyze-query",
-  {
-    sql: z.string().describe("SQL query to analyze")
-  },
-  async ({ sql }) => {
-    try {
-      const explainQuery = `EXPLAIN ANALYZE ${sql}`;
-      const analysis = await duckDB.query(explainQuery);
-
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(analysis, null, 2)
-        }],
-        isError: false
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Query analysis error: ${error}`
-        }],
-        isError: true
-      };
-    }
-  }
-);
 
 const illegalSql = "```sql";
 
@@ -272,7 +179,8 @@ server.prompt(
   "sql-assistant",
   {
     question: z.string().describe("Natural language question"),
-    schema: z.string().optional().describe("Database schema information")
+    schema: z.string().optional().describe("Database schema information. Obtain this using the database-schema resource"),
+    requirements: z.string().optional().describe("Additional-requirements for SQL query generation. Obtain these from other available resources")
   },
   ({ question, schema }) => ({
     messages: [{
@@ -286,6 +194,27 @@ ${schema || 'Use the database-schema resource to get current schema'}
 
 Question: ${question}
 
+Requirements: ${requirements}
+
+`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  "sql-assistant-additional-requirements-1",
+  {
+    question: z.string().describe("Natural language question"),
+    schema: z.string().optional().describe("Additional-requirements for SQL query generation. add these to the sql-assistant prompt")
+  },
+  () => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+       text: `
+
 Requirements:
 - Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting.
 - Use proper DuckDB syntax and functions
@@ -295,6 +224,7 @@ Requirements:
 - TO_CHAR" is not duckdb function
 - columns with aggregate functions must appear in the group by clause
 - DATE_FORMAT is not a duckdb function. use STRFTIME instead
+- FORMAT_DATE is not a duckdb function. use STRFTIME instead
 - Only include columns in SELECT that are either aggregated or listed in GROUP BY.
 
 `
@@ -302,6 +232,95 @@ Requirements:
     }]
   })
 );
+
+server.prompt(
+  "initial-instructions",
+  {
+    question: z.string().describe("Natural language question"),
+    contextTip: z.string().optional().describe("Additional-requirements for SQL query generation. add these to the sql-assistant prompt"),
+    sqlSchema: z.string().optional().describe("sql schema")
+    
+  },
+  ({ question, contextTip, sqlSchema }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `You are a SQL expert.  Given the following database schema (if available)and Question, generate a valid DuckDB SQL query
+      Requirements:
+      - Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting.
+      - Once you have generated the SQL query, respond in json format like this: {"contentType":"sql", "text": "the sql_query"} .
+      - Use proper DuckDB syntax and functions
+      - Ensure the query is safe and well-formed
+      - Consider performance implications
+      - TO_VARCHAR" is not duckdb function
+      - TO_CHAR" is not duckdb function
+      - columns with aggregate functions must appear in the group by clause
+      - DATE_FORMAT is not a duckdb function. use STRFTIME instead
+      - FORMAT_DATE is not a duckdb function. use STRFTIME instead
+      - Only include columns in SELECT that are either aggregated or listed in GROUP BY.
+       
+      Database Schema: ${sqlSchema}
+
+        Question: ${question}
+
+        IF Database Schema above is undefined, then: 
+
+        You must use tools, prompts and resources  to generate SQL query to answer the question. in the end of this message.
+
+        Requirements:
+        
+        - You must find the database schema and then generate a sql query to answer the question.
+        
+        
+        To find the database schema, respond with : {"contentType":"resource_call", "resource_uri": "duckdb://schema"}               
+  
+        - Once you have schema (in Database Schema section) , you must make only tool calls.
+   
+        - Once you have generated the SQL query, respond in format: {"contentType":"sql", "text": "the sql_query"} .
+
+        - Do not print any formatting or any other text. return only the sql statement or tool/resourece/prompt instructions.
+        - Allways answer in json formats as  described above. 
+
+        Additional Context below helps find further actions to generate the sql query that satisfied the Question given in bottom.
+        if Additional Contex below has description like "use this  db-schema to generate query" , then it contains the database schema (inside resourceInfo) so you can generate the sql for the question below.
+        You can then call tool "execute-sql" to execute the sql query that you generate
+
+        Additional Context: ${contextTip}
+
+        
+
+        `
+      }
+    }]
+  })
+);
+
+
+server.prompt(
+  "additional-instructions",
+  {
+    question: z.string().describe("Natural language question"),
+    
+  },
+  ({ question }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `You are a SQL expert. You must use tools, prompts and resources to generate SQL queries.         
+        To get available tools, respond in json format with: {"contentType":"tool_call", "tool_name": "ALL",} .
+        To use a tool, respond in json format with: {"contentType":"tool_call", "tool_name": "tool_name", "arguments": "arguments"} .
+
+      here is 
+
+        `
+      }
+    }]
+  })
+);
+
+
 
 // Prompt: Query optimization assistant
 
