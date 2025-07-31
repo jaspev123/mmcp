@@ -26,11 +26,7 @@ function safeParseJson(jsonString: string) {
     return JSON.parse(fixedString);
   }
 }
- type MCPTool = {
-  name: string;
-  description: string;
-  input_schema: any;
-}
+
 
 export class MCPDuckDBAgent {
   private mcpClient: Client;
@@ -141,7 +137,7 @@ export class MCPDuckDBAgent {
                 console.log(`Tool result for : ${toolName}`, JSON.stringify(toolResult, null, 2),"\n ");
                 const toolResultText = toolResult.content as { text: string }[];
                 
-                // Add tool result as a tool message
+                // Add tool result as a tool message, this will be used as a context for the next LLM call
                 currentMessages.push({
                   role: "tool",
                   content: toolResult.isError ? `Tool Error: ${JSON.stringify(toolResult, null, 2)}` : toolResult.content as { text: string }[][0]
