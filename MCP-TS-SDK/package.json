@@ -12,7 +12,7 @@
     "agent22:ollama": "npx ts-node runAgent22 ollama",
     "agent22:mcp": "npx ts-node runAgent22 MCP",
     "agent33": "npx ts-node runAgent33",    
-    "agent33:mcp": "npx ts-node runAgent-mcpAA MCP",
+    "agent33:mcp": "npx ts-node runAgent33 MCP",
     "clean": "rm -rf dist"
   },
   "dependencies": {
