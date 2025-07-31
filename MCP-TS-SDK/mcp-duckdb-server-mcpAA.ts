@@ -120,7 +120,6 @@ server.resource(
   }
 );
 
-
 server.tool(
   "execute-sql",
   "excute sql queries using known schema",
@@ -155,28 +154,7 @@ server.tool(
   }
 );
 
-function extractSQL(rawText : string) {
-  return rawText
-    .replace(/^```sql\s*/i, '') // remove opening ```sql
-    .replace(/```$/, '')        // remove closing ```
-    .trim();                    // clean up extra whitespace
-}
 
-function convertBigInt(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(convertBigInt);
-  } else if (obj !== null && typeof obj === "object") {
-    const newObj: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      newObj[key] = convertBigInt(value);
-    }
-    return newObj;
-  } else if (typeof obj === "bigint") {
-    return Number(obj); // or: return obj.toString();
-  } else {
-    return obj;
-  }
-}
 
 
 
@@ -274,7 +252,28 @@ Question: ${question}
   })
 );
 
+function extractSQL(rawText : string) {
+  return rawText
+    .replace(/^```sql\s*/i, '') // remove opening ```sql
+    .replace(/```$/, '')        // remove closing ```
+    .trim();                    // clean up extra whitespace
+}
 
+function convertBigInt(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigInt);
+  } else if (obj !== null && typeof obj === "object") {
+    const newObj: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      newObj[key] = convertBigInt(value);
+    }
+    return newObj;
+  } else if (typeof obj === "bigint") {
+    return Number(obj); // or: return obj.toString();
+  } else {
+    return obj;
+  }
+}
 
 
 // Initialize and start the server

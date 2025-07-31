@@ -45,16 +45,13 @@ class DuckDBManager {
   }
 }
 
-// Create the MCP server
 const server = new McpServer({
   name: "DuckDB Query Server",
   version: "1.0.0"
 });
 
-// Initialize DuckDB
 const duckDB = new DuckDBManager();
 
-// define a resource: Get database schema information
 server.resource(
   "database-schema",
   "duckdb://schema",
@@ -75,9 +72,7 @@ server.resource(
           table_name,
           ordinal_position;
       `;
-
       const schemaData = await duckDB.query(schemaQuery);
-
       return {
         contents: [{
           uri: uri.href,
@@ -97,32 +92,6 @@ server.resource(
   }
 );
 
-
-
-function extractSQL(rawText : string) {
-  return rawText
-    .replace(/^```sql\s*/i, '') // remove opening ```sql
-    .replace(/```$/, '')        // remove closing ```
-    .trim();                    // clean up extra whitespace
-}
-
-function convertBigInt(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(convertBigInt);
-  } else if (obj !== null && typeof obj === "object") {
-    const newObj: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      newObj[key] = convertBigInt(value);
-    }
-    return newObj;
-  } else if (typeof obj === "bigint") {
-    return Number(obj); // or: return obj.toString();
-  } else {
-    return obj;
-  }
-}
-
-// Tool: Execute SQL query
 server.tool(
   "execute-sql",
   {
@@ -155,10 +124,6 @@ server.tool(
     }
   }
 );
-
-
-
-
 
 const illegalSql = "```sql";
 
@@ -217,6 +182,28 @@ async function main() {
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
+  }
+}
+function extractSQL(rawText : string) {
+  return rawText
+    .replace(/^```sql\s*/i, '') // remove opening ```sql
+    .replace(/```$/, '')        // remove closing ```
+    .trim();                    // clean up extra whitespace
+}
+
+function convertBigInt(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigInt);
+  } else if (obj !== null && typeof obj === "object") {
+    const newObj: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      newObj[key] = convertBigInt(value);
+    }
+    return newObj;
+  } else if (typeof obj === "bigint") {
+    return Number(obj); // or: return obj.toString();
+  } else {
+    return obj;
   }
 }
 

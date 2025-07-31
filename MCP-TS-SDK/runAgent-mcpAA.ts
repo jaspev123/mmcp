@@ -1,4 +1,4 @@
-import MCPDuckDBAgent from './mcp-duckdb-client-mcpAA';
+import MCPDuckDBAgent from './mcp-duckdb-agent-mcpAA';
 
 (async () => {
   const agent = new MCPDuckDBAgent();

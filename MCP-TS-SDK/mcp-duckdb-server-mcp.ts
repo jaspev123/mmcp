@@ -64,10 +64,8 @@ const server = new McpServer({
   version: "1.0.0"
 });
 
-// Initialize DuckDB
 const duckDB = new DuckDBManager();
 
-// define a resource: Get database schema information
 server.resource(
   "database-schema",
   "duckdb://schema",
@@ -120,32 +118,6 @@ server.resource(
   }
 );
 
-
-
-function extractSQL(rawText : string) {
-  return rawText
-    .replace(/^```sql\s*/i, '') // remove opening ```sql
-    .replace(/```$/, '')        // remove closing ```
-    .trim();                    // clean up extra whitespace
-}
-
-function convertBigInt(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(convertBigInt);
-  } else if (obj !== null && typeof obj === "object") {
-    const newObj: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      newObj[key] = convertBigInt(value);
-    }
-    return newObj;
-  } else if (typeof obj === "bigint") {
-    return Number(obj); // or: return obj.toString();
-  } else {
-    return obj;
-  }
-}
-
-
 server.tool(
   "execute-sql",
   {
@@ -179,8 +151,6 @@ server.tool(
   }
 );
 
-
-
 const illegalSql = "```sql";
 
 // Prompt: SQL generation assistant
@@ -211,36 +181,7 @@ Requirements: ${requirements}
   })
 );
 
-server.prompt(
-  "sql-assistant-additional-requirements-1",
-  {
-    question: z.string().describe("Natural language question"),
-    schema: z.string().optional().describe("Additional-requirements for SQL query generation. add these to the sql-assistant prompt")
-  },
-  () => ({
-    messages: [{
-      role: "user",
-      content: {
-        type: "text",
-       text: `
 
-Requirements:
-- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting.
-- Use proper DuckDB syntax and functions
-- Ensure the query is safe and well-formed
-- Consider performance implications
-- TO_VARCHAR" is not duckdb function
-- TO_CHAR" is not duckdb function
-- columns with aggregate functions must appear in the group by clause
-- DATE_FORMAT is not a duckdb function. use STRFTIME instead
-- FORMAT_DATE is not a duckdb function. use STRFTIME instead
-- Only include columns in SELECT that are either aggregated or listed in GROUP BY.
-
-`
-      }
-    }]
-  })
-);
 
 server.prompt(
   "initial-instructions",
@@ -321,6 +262,29 @@ server.prompt(
     }]
   })
 );
+
+function extractSQL(rawText : string) {
+  return rawText
+    .replace(/^```sql\s*/i, '') // remove opening ```sql
+    .replace(/```$/, '')        // remove closing ```
+    .trim();                    // clean up extra whitespace
+}
+
+function convertBigInt(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigInt);
+  } else if (obj !== null && typeof obj === "object") {
+    const newObj: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      newObj[key] = convertBigInt(value);
+    }
+    return newObj;
+  } else if (typeof obj === "bigint") {
+    return Number(obj); // or: return obj.toString();
+  } else {
+    return obj;
+  }
+}
 
 
 // Initialize and start the server
