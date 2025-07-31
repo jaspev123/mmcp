@@ -1,0 +1,374 @@
+> npx ts-node runAgent22
+
+Connected to MCP DuckDB server
+Initial prompt from MCP server: ****
+ [
+  {
+    role: 'user',
+    content: {
+      type: 'text',
+      text: 'You are a SQL expert.  Given the following database schema (if available)and a user Question, generate a valid DuckDB SQL query\n' +
+        '      SQL generation Requirements:\n' +
+        '      \n' +
+        '      - Once you have generated the SQL query, respond in json format like this: {"contentType":"text", "text": "<the sql_query"} .\n' +
+        '      - Return only the SQL query like described above, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "```sql or any other formatting.\n' +
+        '      - Use proper DuckDB syntax and functions\n' +
+        '      - Ensure the query is safe and well-formed\n' +
+        '      - Consider performance implications\n' +
+        '      - TO_VARCHAR" is not duckdb function\n' +
+        '      - TO_CHAR" is not duckdb function\n' +
+        '      - columns with aggregate functions must appear in the group by clause\n' +
+        '      - DATE_FORMAT is not a duckdb function. use STRFTIME instead\n' +
+        '      - FORMAT_DATE is not a duckdb function. use STRFTIME instead\n' +
+        '      - STRFTIME is a duckdb function. see variations below      \t\n' +
+        '      - strftime(DATE, VARCHAR) -> VARCHAR\n' +
+        '      - strftime(TIMESTAMP, VARCHAR) -> VARCHAR\n' +
+        '      - strftime(TIMESTAMP_NS, VARCHAR) -> VARCHAR\n' +
+        '      - strftime(VARCHAR, DATE) -> VARCHAR\n' +
+        '      - strftime(VARCHAR, TIMESTAMP) -> VARCHAR\n' +
+        '      - strftime(VARCHAR, TIMESTAMP_NS) -> VARCHAR\n' +
+        '      - strftime(TIMESTAMP WITH TIME ZONE, VARCHAR) -> VARCHAR\n' +
+        '      - Only include columns in SELECT that are either aggregated or listed in GROUP BY.\n' +
+        '\n' +
+        '      Operational Requirements:\n' +
+        '       - allways respond in json structure {"contentType":"text", "text": "<the sql_query>"}  or using other response type such as described belo.\n' +
+        '        - You must find the database schema and then generate a sql query to answer the question.  use table names from schema, no guessing !     \n' +
+        '        - To retrieves the database schema, respond with json message : {"contentType":"resource_call", "resource_uri": "duckdb://schema"}                 \n' +
+        '        - Once you have schema (in Database Schema section) , you must make only tool calls.              \n' +
+        '        - Allways answer in json formats as  described above. Do not print any human readable text such as : "I" need to retrieve the schema to generate the correct SQL query"\n' +
+        '       \n' +
+        '     Database Schema, if available: undefined\n' +
+        '\n' +
+        '        Question: \n' +
+        '    list taxi trips that have the largest \n' +
+        '    trip distance for each month (also show the year in separate column). \n' +
+        "    format dates like like 'mm.dd.yyyy'.\n" +
+        '    give  months a human redable name    \n' +
+        '    \n' +
+        '\n' +
+        '        Additional Context below helps find further actions to generate the sql query that satisfied the Question given in bottom.\n' +
+        '\n' +
+        '        Additional Context: undefined        \n' +
+        '\n' +
+        '        '
+    }
+  }
+] 
+****
+
+      !!!!!!!!!!!!!!
+      The prompt contains instructions for LLM  on how respond in JSON format only and in a way that
+      Agent can process the response and identify what to do. This makes the prompt tightly coupled with the agent implementation.
+      This not how MCP ideally is meant to be used. 
+
+      !!!!!!!!!!!!!!      
+      
+Initial Response from LLM: ******
+ {"contentType":"resource_call", "resource_uri": "duckdb://schema"} 
+******
+LLM call loop counter:  0
+Refined prompt from MCP server with schema injected:
+ [
+  {
+    role: 'user',
+    content: {
+      type: 'text',
+      text: 'You are a SQL expert.  Given the following database schema (if available)and a user Question, generate a valid DuckDB SQL query\n' +
+        '      SQL generation Requirements:\n' +
+        '      \n' +
+        '      - Once you have generated the SQL query, respond in json format like this: {"contentType":"text", "text": "<the sql_query"} .\n' +
+        '      - Return only the SQL query like described above, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "```sql or any other formatting.\n' +
+        '      - Use proper DuckDB syntax and functions\n' +
+        '      - Ensure the query is safe and well-formed\n' +
+        '      - Consider performance implications\n' +
+        '      - TO_VARCHAR" is not duckdb function\n' +
+        '      - TO_CHAR" is not duckdb function\n' +
+        '      - columns with aggregate functions must appear in the group by clause\n' +
+        '      - DATE_FORMAT is not a duckdb function. use STRFTIME instead\n' +
+        '      - FORMAT_DATE is not a duckdb function. use STRFTIME instead\n' +
+        '      - STRFTIME is a duckdb function. see variations below      \t\n' +
+        '      - strftime(DATE, VARCHAR) -> VARCHAR\n' +
+        '      - strftime(TIMESTAMP, VARCHAR) -> VARCHAR\n' +
+        '      - strftime(TIMESTAMP_NS, VARCHAR) -> VARCHAR\n' +
+        '      - strftime(VARCHAR, DATE) -> VARCHAR\n' +
+        '      - strftime(VARCHAR, TIMESTAMP) -> VARCHAR\n' +
+        '      - strftime(VARCHAR, TIMESTAMP_NS) -> VARCHAR\n' +
+        '      - strftime(TIMESTAMP WITH TIME ZONE, VARCHAR) -> VARCHAR\n' +
+        '      - Only include columns in SELECT that are either aggregated or listed in GROUP BY.\n' +
+        '\n' +
+        '      Operational Requirements:\n' +
+        '       - allways respond in json structure {"contentType":"text", "text": "<the sql_query>"}  or using other response type such as described belo.\n' +
+        '        - You must find the database schema and then generate a sql query to answer the question.  use table names from schema, no guessing !     \n' +
+        '        - To retrieves the database schema, respond with json message : {"contentType":"resource_call", "resource_uri": "duckdb://schema"}                 \n' +
+        '        - Once you have schema (in Database Schema section) , you must make only tool calls.              \n' +
+        '        - Allways answer in json formats as  described above. Do not print any human readable text such as : "I" need to retrieve the schema to generate the correct SQL query"\n' +
+        '       \n' +
+        '     Database Schema, if available: [\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "VendorID",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tpep_pickup_datetime",\n' +
+        '    "data_type": "TIMESTAMP",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tpep_dropoff_datetime",\n' +
+        '    "data_type": "TIMESTAMP",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "passenger_count",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "trip_distance",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "RatecodeID",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "store_and_fwd_flag",\n' +
+        '    "data_type": "VARCHAR",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "PULocationID",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "DOLocationID",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "payment_type",\n' +
+        '    "data_type": "BIGINT",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "fare_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "extra",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "mta_tax",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tip_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "tolls_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "improvement_surcharge",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "total_amount",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "congestion_surcharge",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "table_name": "tripdata",\n' +
+        '    "column_name": "airport_fee",\n' +
+        '    "data_type": "DOUBLE",\n' +
+        '    "is_nullable": "YES",\n' +
+        '    "column_default": null\n' +
+        '  }\n' +
+        ']\n' +
+        '\n' +
+        '        Question: \n' +
+        '    list taxi trips that have the largest \n' +
+        '    trip distance for each month (also show the year in separate column). \n' +
+        "    format dates like like 'mm.dd.yyyy'.\n" +
+        '    give  months a human redable name    \n' +
+        '    \n' +
+        '\n' +
+        '        Additional Context below helps find further actions to generate the sql query that satisfied the Question given in bottom.\n' +
+        '\n' +
+        '        Additional Context: {\n' +
+        '  "description": "use this resource to learn more about the data to help you perform the requested task}"\n' +
+        '}        \n' +
+        '\n' +
+        '        '
+    }
+  }
+]
+LLM call loop counter:  1
+--- SQL query from LLM:
+ SELECT 
+  STRFTIME(tpep_pickup_datetime, '%Y') AS year,
+  STRFTIME(tpep_pickup_datetime, '%m') AS month_num,
+  CASE 
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '01' THEN 'January'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '02' THEN 'February'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '03' THEN 'March'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '04' THEN 'April'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '05' THEN 'May'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '06' THEN 'June'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '07' THEN 'July'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '08' THEN 'August'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '09' THEN 'September'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '10' THEN 'October'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '11' THEN 'November'
+    WHEN STRFTIME(tpep_pickup_datetime, '%m') = '12' THEN 'December'
+  END AS month_name,
+  STRFTIME(tpep_pickup_datetime, '%m.%d.%Y') AS formatted_date,
+  trip_distance,
+  passenger_count,
+  total_amount
+FROM tripdata
+WHERE (STRFTIME(tpep_pickup_datetime, '%Y-%m'), trip_distance) IN (
+  SELECT 
+    STRFTIME(tpep_pickup_datetime, '%Y-%m'),
+    MAX(trip_distance)
+  FROM tripdata
+  GROUP BY STRFTIME(tpep_pickup_datetime, '%Y-%m')
+)
+ORDER BY year, month_num
+
+      !!!!!
+      at this point in code, the LLM has created the sql query. 
+      so this tool call is not initiated by LLM, but by the host/agent
+      
+      !!!!!
+      
+
+ Final result for running the Query in Duckdb:
+ -----
+ [
+  {
+    year: '2008',
+    month_num: '12',
+    month_name: 'December',
+    formatted_date: '12.31.2008',
+    trip_distance: 18.5,
+    passenger_count: 1,
+    total_amount: 71.1
+  },
+  {
+    year: '2009',
+    month_num: '01',
+    month_name: 'January',
+    formatted_date: '01.01.2009',
+    trip_distance: 16.71,
+    passenger_count: 1,
+    total_amount: 82.55
+  },
+  {
+    year: '2021',
+    month_num: '12',
+    month_name: 'December',
+    formatted_date: '12.31.2021',
+    trip_distance: 21.13,
+    passenger_count: 5,
+    total_amount: 79.37
+  },
+  {
+    year: '2022',
+    month_num: '01',
+    month_name: 'January',
+    formatted_date: '01.11.2022',
+    trip_distance: 306159.28,
+    passenger_count: null,
+    total_amount: 22.2
+  },
+  {
+    year: '2022',
+    month_num: '02',
+    month_name: 'February',
+    formatted_date: '02.01.2022',
+    trip_distance: 10.83,
+    passenger_count: 1,
+    total_amount: 37.8
+  },
+  {
+    year: '2022',
+    month_num: '03',
+    month_name: 'March',
+    formatted_date: '03.09.2022',
+    trip_distance: 2.88,
+    passenger_count: 4,
+    total_amount: 17.76
+  },
+  {
+    year: '2022',
+    month_num: '04',
+    month_name: 'April',
+    formatted_date: '04.06.2022',
+    trip_distance: 1.67,
+    passenger_count: 2,
+    total_amount: 12.8
+  },
+  {
+    year: '2022',
+    month_num: '05',
+    month_name: 'May',
+    formatted_date: '05.18.2022',
+    trip_distance: 1.47,
+    passenger_count: 4,
+    total_amount: 12.96
+  }
+] -- End of Queried data---
