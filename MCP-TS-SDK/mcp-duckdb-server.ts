@@ -97,39 +97,7 @@ server.resource(
   }
 );
 
-// Resource: Get table list
-server.resource(
-  "table-list",
-  "duckdb://tables",
-  async (uri) => {
-    try {
-      const tablesQuery = `
-        SELECT DISTINCT table_name
-        FROM information_schema.columns
-        WHERE table_schema = 'main'
-        ORDER BY table_name;
-      `;
 
-      const tables = await duckDB.query(tablesQuery);
-
-      return {
-        contents: [{
-          uri: uri.href,
-          mimeType: "application/json",
-          text: JSON.stringify(tables, null, 2)
-        }]
-      };
-    } catch (error) {
-      return {
-        contents: [{
-          uri: uri.href,
-          mimeType: "text/plain",
-          text: `Error retrieving tables: ${error}`
-        }]
-      };
-    }
-  }
-);
 
 function extractSQL(rawText : string) {
   return rawText
@@ -188,82 +156,9 @@ server.tool(
   }
 );
 
-// Tool: Generate SQL from natural language
-server.tool(
-  "generate-sql",
-  {
-    question: z.string().describe("Natural language question to convert to SQL"),
-    context: z.string().optional().describe("Additional context about the query")
-  },
-  async ({ question, context }) => {
-    try {
-      // Get schema information
-      const schemaQuery = `
-        SELECT
-          table_name,
-          column_name,
-          data_type
-        FROM
-          information_schema.columns
-        WHERE
-          table_schema = 'main'
-        ORDER BY
-          table_name,
-          ordinal_position;
-      `;
 
-      const schemaData = await duckDB.query(schemaQuery);
-      const schemaText = JSON.stringify(schemaData, null, 2);
 
-      // Return the schema and question for the LLM to process
-      return {
-        content: [{
-          type: "text",
-          text: `Schema Information:\n${schemaText}\n\nQuestion: ${question}\n\nContext: ${context || 'None'}\n\nPlease generate a SQL query based on this information.`
-        }],
-        isError: false
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Error generating SQL: ${error}`
-        }],
-        isError: true
-      };
-    }
-  }
-);
 
-// Tool: Analyze query performance
-server.tool(
-  "analyze-query",
-  {
-    sql: z.string().describe("SQL query to analyze")
-  },
-  async ({ sql }) => {
-    try {
-      const explainQuery = `EXPLAIN ANALYZE ${sql}`;
-      const analysis = await duckDB.query(explainQuery);
-
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(analysis, null, 2)
-        }],
-        isError: false
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Query analysis error: ${error}`
-        }],
-        isError: true
-      };
-    }
-  }
-);
 
 const illegalSql = "```sql";
 
