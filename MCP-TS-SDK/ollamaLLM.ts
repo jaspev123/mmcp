@@ -103,14 +103,14 @@ export async function callOllamaLLJson(
   return result;
 }
 
-export async function callOllamaLLJsonTools(
+export async function callOllamaLLJsonWithTools(
   model: string,
   messages: ChatMessage[],
   tools: OllamaLLMTool[],
   callContext ?: any[],
   
 ): Promise<OllamaLLMResponseToolsMessage> {
-  //console.log("callOllamaLLJsonTools - Messages: *****\n", JSON.stringify(messages,null,2),"\n*****");
+  console.log("callOllamaLLJsonWithTools - Messages: *****\n", JSON.stringify(messages,null,2),"\n*****");
   //console.log("callOllamaLLJsonTools - Tools: *****\n", JSON.stringify(tools,null,2),"\n*****");
   
   const response = await fetch('http://localhost:11434/api/chat', {
