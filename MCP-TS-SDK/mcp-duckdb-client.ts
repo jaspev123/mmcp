@@ -52,7 +52,7 @@ export class MCPDuckDBAgent {
       throw new Error('MCP client not connected. Call initialize() first.');
     }
     try {
-      // Get database schema using MCP (client knows about the server)
+      
       const schemaResource = await this.mcpClient.readResource({
         name: "database-schema",
         uri: "duckdb://schema"
@@ -69,15 +69,12 @@ export class MCPDuckDBAgent {
         }
       });
       console.log("prompt from MCP server: \n", promptFromServer.messages);  
-      // Generate SQL using LLM
-      //const sql = await this.generateSQLWithBedrockLLM(promptFromServer.messages);     
-      // Extract text content from messages
       const promptText: string = promptFromServer.messages
         .map(msg => msg.content.text)
         .join('\n');
       const sql = await llmFunction(promptText);     
       console.log("SQL generated from LLM:\n", sql);
-      // Execute SQL using a MCP tool (client knows about the server)
+      // Execute SQL using a MCP tool (host knows about the server)
       const queryResult  = await this.mcpClient.callTool({
         name: "execute-sql",
         arguments: {

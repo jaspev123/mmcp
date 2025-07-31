@@ -3,7 +3,7 @@ import { TextDecoder } from "util";
 import { Buffer } from 'buffer';
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { callOllamaLLJson, callOllamaLLM, OllamaLLMResponse, OllamaLLMResponseJSON } from "./ollamaLLM";
+import { callOllamaLLJson, callOllamaLLM, ChatMessage, OllamaLLMResponse, OllamaLLMResponseJSON } from "./ollamaLLM";
 
 const modelId = "arn:aws:bedrock:eu-north-1:652477483543:inference-profile/eu.anthropic.claude-3-7-sonnet-20250219-v1:0";
 const bedrockClient = new BedrockRuntimeClient({ region: "eu-north-1" });
@@ -71,6 +71,21 @@ export class MCPDuckDBAgent {
     }
     try {      
 
+      const messages : ChatMessage[] = [
+        {
+            "role": "user",
+            "content": question
+        }
+    ]
+    
+    const toolsResponse = await this.mcpClient.listTools()
+    const available_tools = toolsResponse.tools.map(tool => ({
+        "name": tool.name,        
+        "input_schema": tool.inputSchema
+    }))
+    console.log("Available tools:", available_tools);
+
+
       const promptFromServer  = await this.mcpClient.getPrompt({
         name: "initial-instructions",
         arguments: {
@@ -78,13 +93,13 @@ export class MCPDuckDBAgent {
           contextTip: "undefined"
         }
       });
-      console.log("Initial prompt from MCP server:\n", promptFromServer.messages);
+      console.log("Initial prompt from MCP server: ****\n", promptFromServer.messages, "\n****");
 
       const promptText: string = promptFromServer.messages
         .map(msg => msg.content.text)
         .join('\n');
       const response = await llmFunction(promptText);  
-      console.log("Initial Response from LLM:\n", response);
+      console.log("Initial Response from LLM: ******\n", response, "\n******");
       let objResponse = JSON.parse(response); 
       console.log("Type of initial response from LLM:\n", objResponse.contentType);
 
@@ -100,8 +115,8 @@ export class MCPDuckDBAgent {
         console.log("later llm Response.contentType: ",objResponse.contentType);
         let sqlSchema = "";
 
-        if (objResponse.contentType === "sql") {
-          console.log("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
+        if (objResponse.contentType === "text") {
+          console.log("sqlsqlsqlsqlsqlsqlsqlsqlsqlsqlsqlsqlsqlsqlsqlsql generated:");
           doMoreWorkWithLLM = false;
           console.log("-----SQL query from LLM:\n", objResponse.text);
           finalText.push(objResponse.text);          
@@ -112,8 +127,8 @@ export class MCPDuckDBAgent {
             const resources = await this.mcpClient.listResources();
             llmContextTip = JSON.stringify(resources.resources, null, 2);
             llmContextTip = { 
-              description : `use this resource information find out the schema resource.
-               respond with  format {"contentType":"resource_call", "resource_uri": "${resources.resources[0].uri}"}`,
+              description : `use this resource information find out more abou available resources.
+               `,
               resourceInfo : llmContextTip
               
             };
@@ -130,7 +145,7 @@ export class MCPDuckDBAgent {
             sqlSchema = resourceResult.contents[0].text +'';      
             
             llmContextTip = { 
-              description : "use this  db-schema to generate query}",
+              description : "use this resource to learn more about the data to help you perform the requested task}",
               
               
             };
@@ -143,7 +158,8 @@ export class MCPDuckDBAgent {
             llmContextTip = JSON.stringify(prompts.prompts, null, 2);
             llmContextTip = { 
               resourceInfo : llmContextTip,
-              description : `use this promt information find out assitional restrictions on sql generation. use format {"contentType":"prompt_call", "prompt_name": "th name"}`
+              description : `use this prompt information find out additional rules
+              . use format {"contentType":"prompt_call", "prompt_name": "<prompt_name>"}`
             };
             llmContextTip =JSON.stringify(llmContextTip, null, 2);
           } else {
@@ -154,7 +170,7 @@ export class MCPDuckDBAgent {
             });
             llmContextTip = { 
               resourceInfo : promptResult.messages,
-              description : "use th resource information to aquiremore prompts that may enhance later query gneration"
+              description : "use the prompt information to aquire more prompts that may provvide more information"
             };
             llmContextTip =JSON.stringify(llmContextTip, null, 2);            
           }
@@ -164,7 +180,8 @@ export class MCPDuckDBAgent {
             const tools = await this.mcpClient.listTools();
             llmContextTip = JSON.stringify(tools.tools, null, 2);
             llmContextTip = { 
-              description : `use this tool information to aquire more tools that may enhance later query gneration. use format {"contentType":"tool_call", "tool_name": "th name"}`,
+              description : `use this tool information to aquire more tools that you can call.
+               use format {"contentType":"tool_call", "tool_name": "<tool_name>"}`,
               resourceInfo : llmContextTip,
               
             };
@@ -176,8 +193,8 @@ export class MCPDuckDBAgent {
             });
             const content = toolResult.content as { text: string }[];
             llmContextTip = {
-              description : "use the tool information to tools to query the database ",
-              mcpResponcse: JSON.parse(content[0].text + '' || '[]'),
+              description : `You called tool: ${objResponse.tool_name}`,
+              mcpResponse: JSON.parse(content[0].text + '' || '[]'),
                
             }
             llmContextTip =JSON.stringify(llmContextTip, null, 2);             
@@ -262,8 +279,7 @@ export class MCPDuckDBAgent {
     }
     console.log(" getSQLSuggestion:", question, context);
 
-    try {
-      // Use MCP tool to generate SQL suggestions
+    try {      
       const suggestionResult = await this.mcpClient.callTool({
         name: "generate-sql",
         arguments: {

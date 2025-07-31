@@ -121,38 +121,14 @@ server.resource(
 );
 
 
-
-function extractSQL(rawText : string) {
-  return rawText
-    .replace(/^```sql\s*/i, '') // remove opening ```sql
-    .replace(/```$/, '')        // remove closing ```
-    .trim();                    // clean up extra whitespace
-}
-
-function convertBigInt(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(convertBigInt);
-  } else if (obj !== null && typeof obj === "object") {
-    const newObj: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      newObj[key] = convertBigInt(value);
-    }
-    return newObj;
-  } else if (typeof obj === "bigint") {
-    return Number(obj); // or: return obj.toString();
-  } else {
-    return obj;
-  }
-}
-
-
 server.tool(
   "execute-sql",
+  "excute sql queries using known schema",
   {
     sql: z.string().describe("SQL query to execute against the DuckDB database"),
-    limit: z.number().optional().default(100).describe("Maximum number of rows to return")
+    
   },
-  async ({ sql, limit }) => {
+  async ({ sql }) => {
     try {
       // Add LIMIT clause if not present and limit is specified
        
@@ -179,17 +155,52 @@ server.tool(
   }
 );
 
+function extractSQL(rawText : string) {
+  return rawText
+    .replace(/^```sql\s*/i, '') // remove opening ```sql
+    .replace(/```$/, '')        // remove closing ```
+    .trim();                    // clean up extra whitespace
+}
+
+function convertBigInt(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigInt);
+  } else if (obj !== null && typeof obj === "object") {
+    const newObj: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      newObj[key] = convertBigInt(value);
+    }
+    return newObj;
+  } else if (typeof obj === "bigint") {
+    return Number(obj); // or: return obj.toString();
+  } else {
+    return obj;
+  }
+}
+
 
 
 const illegalSql = "```sql";
 
-// Prompt: SQL generation assistant
+const dummy ="";
+
+const duckDBDstrFunctionHelp = `
+
+      - STRFTIME is a duckdb function. see variations below      	
+      - strftime(DATE, VARCHAR) -> VARCHAR
+      - strftime(TIMESTAMP, VARCHAR) -> VARCHAR
+      - strftime(TIMESTAMP_NS, VARCHAR) -> VARCHAR
+      - strftime(VARCHAR, DATE) -> VARCHAR
+      - strftime(VARCHAR, TIMESTAMP) -> VARCHAR
+      - strftime(VARCHAR, TIMESTAMP_NS) -> VARCHAR
+      - strftime(TIMESTAMP WITH TIME ZONE, VARCHAR) -> VARCHAR
+`;
+
 server.prompt(
   "sql-assistant",
   {
     question: z.string().describe("Natural language question"),
-    schema: z.string().optional().describe("Database schema information. Obtain this using the database-schema resource"),
-    requirements: z.string().optional().describe("Additional-requirements for SQL query generation. Obtain these from other available resources")
+    schema: z.string().optional().describe("Database schema information")
   },
   ({ question, schema }) => ({
     messages: [{
@@ -203,29 +214,9 @@ ${schema || 'Use the database-schema resource to get current schema'}
 
 Question: ${question}
 
-Requirements: ${requirements}
-
-`
-      }
-    }]
-  })
-);
-
-server.prompt(
-  "sql-assistant-additional-requirements-1",
-  {
-    question: z.string().describe("Natural language question"),
-    schema: z.string().optional().describe("Additional-requirements for SQL query generation. add these to the sql-assistant prompt")
-  },
-  () => ({
-    messages: [{
-      role: "user",
-      content: {
-        type: "text",
-       text: `
-
 Requirements:
-- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting.
+- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting 
+or new line characters.
 - Use proper DuckDB syntax and functions
 - Ensure the query is safe and well-formed
 - Consider performance implications
@@ -233,9 +224,8 @@ Requirements:
 - TO_CHAR" is not duckdb function
 - columns with aggregate functions must appear in the group by clause
 - DATE_FORMAT is not a duckdb function. use STRFTIME instead
-- FORMAT_DATE is not a duckdb function. use STRFTIME instead
-- Only include columns in SELECT that are either aggregated or listed in GROUP BY.
-
+- Only include columns in the SELECT list that are either aggregated or listed in GROUP BY when generating a
+with group by clause
 `
       }
     }]
@@ -246,20 +236,26 @@ server.prompt(
   "initial-instructions",
   {
     question: z.string().describe("Natural language question"),
-    contextTip: z.string().optional().describe("Additional-requirements for SQL query generation. add these to the sql-assistant prompt"),
-    sqlSchema: z.string().optional().describe("sql schema")
+    schema: z.string().optional().describe("Database schema information. Obtain this using the database-schema resource"),
+    
     
   },
-  ({ question, contextTip, sqlSchema }) => ({
+  ({ question, schema }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `You are a SQL expert.  Given the following database schema (if available)and a user Question, generate a valid DuckDB SQL query
-      SQL generation Requirements:
+        text: `You are a SQL expert. Given the following database schema and question, generate a valid DuckDB SQL query.
+
+Database Schema:
+${schema || 'Use the database-schema resource to get current schema'}
+
+Question: ${question}
+
       
-      - Once you have generated the SQL query, respond in json format like this: {"contentType":"text", "text": "<the sql_query"} .
-      - Return only the SQL query like described above, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting.
+      SQL generation Requirements:      
+     
+      - Return only the sql statement as content- not any other text. do not print "${illegalSql} or any other formatting.
       - Use proper DuckDB syntax and functions
       - Ensure the query is safe and well-formed
       - Consider performance implications
@@ -267,31 +263,10 @@ server.prompt(
       - TO_CHAR" is not duckdb function
       - columns with aggregate functions must appear in the group by clause
       - DATE_FORMAT is not a duckdb function. use STRFTIME instead
-      - FORMAT_DATE is not a duckdb function. use STRFTIME instead
-      - STRFTIME is a duckdb function. see variations below      	
-      - strftime(DATE, VARCHAR) -> VARCHAR
-      - strftime(TIMESTAMP, VARCHAR) -> VARCHAR
-      - strftime(TIMESTAMP_NS, VARCHAR) -> VARCHAR
-      - strftime(VARCHAR, DATE) -> VARCHAR
-      - strftime(VARCHAR, TIMESTAMP) -> VARCHAR
-      - strftime(VARCHAR, TIMESTAMP_NS) -> VARCHAR
-      - strftime(TIMESTAMP WITH TIME ZONE, VARCHAR) -> VARCHAR
-      - Only include columns in SELECT that are either aggregated or listed in GROUP BY.
+      - FORMAT_DATE is not a duckdb function. use STRFTIME instead     
 
-      Operational Requirements:
-       - allways respond in json structure {"contentType":"text", "text": "<the sql_query>"}  or using other response type such as described belo.
-        - You must find the database schema and then generate a sql query to answer the question.  use table names from schema, no guessing !     
-        - To retrieves the database schema, respond with json message : {"contentType":"resource_call", "resource_uri": "duckdb://schema"}                 
-        - Once you have schema (in Database Schema section) , you must make only tool calls.              
-        - Allways answer in json formats as  described above. Do not print any human readable text such as : "I" need to retrieve the schema to generate the correct SQL query"
-       
-     Database Schema, if available: ${sqlSchema}
-
-        Question: ${question}
-
-        Additional Context below helps find further actions to generate the sql query that satisfied the Question given in bottom.
-
-        Additional Context: ${contextTip}        
+      ${duckDBDstrFunctionHelp}       
+                
 
         `
       }
@@ -299,28 +274,7 @@ server.prompt(
   })
 );
 
-server.prompt(
-  "additional-instructions",
-  {
-    question: z.string().describe("Natural language question"),
-    
-  },
-  ({ question }) => ({
-    messages: [{
-      role: "user",
-      content: {
-        type: "text",
-        text: `You are a SQL expert. You must use tools, prompts and resources to generate SQL queries.         
-        To get available tools, respond in json format with: {"contentType":"tool_call", "tool_name": "ALL",} .
-        To use a tool, respond in json format with: {"contentType":"tool_call", "tool_name": "tool_name", "arguments": "arguments"} .
 
-      here is 
-
-        `
-      }
-    }]
-  })
-);
 
 
 // Initialize and start the server
