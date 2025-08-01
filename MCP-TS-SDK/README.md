@@ -25,8 +25,18 @@ npm install
 
 ### 2. Initialize the DuckDB Database
 
+
+
 Before running any demo applications, you need to initialize the DuckDB database with sample data:
 
+```bash
+npm run importdb
+```
+
+The LLM may generate a SQL query that is too large to execute in reasonable time.
+The db lockfile migth get stuck. Then just delete the database directory (rm -rf database) and run the import script again.
+
+The import script :
 ```bash
 npm run importdb
 ```

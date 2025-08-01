@@ -1,0 +1,101 @@
+npm run agent33
+
+> mcp-ts-sdk@1.0.0 agent33
+> npx ts-node runAgent33
+
+Connected to MCP DuckDB server
+Question:
+
+    list taxi trips from database having the greatest trip distance per each month  ie. montly maximum ride.
+    also list the year in separate column.
+    show  months with a human readable name.
+
+
+
+callOllamaLLMJsonWithTools - Messages: *****
+ [
+  {
+    "role": "user",
+    "content": "You are a SQL expert. Given the following database schema and question, generate a valid DuckDB SQL query.\n\nDatabase Schema:\n[\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"VendorID\",\n    \"data_type\": \"BIGINT\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"tpep_pickup_datetime\",\n    \"data_type\": \"TIMESTAMP\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"tpep_dropoff_datetime\",\n    \"data_type\": \"TIMESTAMP\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"passenger_count\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"trip_distance\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"RatecodeID\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"store_and_fwd_flag\",\n    \"data_type\": \"VARCHAR\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"PULocationID\",\n    \"data_type\": \"BIGINT\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"DOLocationID\",\n    \"data_type\": \"BIGINT\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"payment_type\",\n    \"data_type\": \"BIGINT\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"fare_amount\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"extra\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"mta_tax\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"tip_amount\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"tolls_amount\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"improvement_surcharge\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"total_amount\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"congestion_surcharge\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  },\n  {\n    \"table_name\": \"tripdata\",\n    \"column_name\": \"airport_fee\",\n    \"data_type\": \"DOUBLE\",\n    \"is_nullable\": \"YES\",\n    \"column_default\": null\n  }\n]\n\nQuestion: \n    list taxi trips from database having the greatest trip distance per each month  ie. montly maximum ride.   \n    also list the year in separate column.  \n    show  months with a human readable name.\n    \n        \n    \n\nRequirements:\n\nRequirements:\n- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print \"```sql or any other formatting \nor new line characters.\n- Use proper DuckDB syntax and functions\n- Ensure the query is safe and well-formed\n- Consider performance implications\n- TO_VARCHAR\" is not duckdb function\n- TO_CHAR\" is not duckdb function\n- columns with aggregate functions must appear in the group by clause\n- DATE_FORMAT is not a duckdb function. use STRFTIME instead\n- Only include columns in the SELECT list that are either aggregated or listed in GROUP BY when generating a\nwith group by clause\n\n\nFinally: execute the generated SQL query using the a tool.\n"
+  }
+]
+*****
+
+ Normal LLM call response:  {
+  "role": "assistant",
+  "content": "",
+  "tool_calls": [
+    {
+      "function": {
+        "name": "execute-sql",
+        "arguments": {
+          "sql": "SELECT STRFTIME('%Y', tpep_pickup_datetime) AS year, STRFTIME('%m', tpep_pickup_datetime) AS month, MAX(trip_distance) AS max_trip_distance\nFROM tripdata\nGROUP BY STRFTIME('%Y', tpep_pickup_datetime), STRFTIME('%m', tpep_pickup_datetime)\nORDER BY max_trip_distance DESC"
+        }
+      }
+    }
+  ]
+}
+
+ Tool Arguments for toolCall:  {
+  sql: "SELECT STRFTIME('%Y', tpep_pickup_datetime) AS year, STRFTIME('%m', tpep_pickup_datetime) AS month, MAX(trip_distance) AS max_trip_distance\n" +
+    'FROM tripdata\n' +
+    "GROUP BY STRFTIME('%Y', tpep_pickup_datetime), STRFTIME('%m', tpep_pickup_datetime)\n" +
+    'ORDER BY max_trip_distance DESC'
+}
+Tool result for : execute-sql {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"year\": \"2022\",\n    \"month\": \"01\",\n    \"max_trip_distance\": 306159.28\n  },\n  {\n    \"year\": \"2021\",\n    \"month\": \"12\",\n    \"max_trip_distance\": 21.13\n  },\n  {\n    \"year\": \"2008\",\n    \"month\": \"12\",\n    \"max_trip_distance\": 18.5\n  },\n  {\n    \"year\": \"2009\",\n    \"month\": \"01\",\n    \"max_trip_distance\": 16.71\n  },\n  {\n    \"year\": \"2022\",\n    \"month\": \"02\",\n    \"max_trip_distance\": 10.83\n  },\n  {\n    \"year\": \"2022\",\n    \"month\": \"03\",\n    \"max_trip_distance\": 2.88\n  },\n  {\n    \"year\": \"2022\",\n    \"month\": \"04\",\n    \"max_trip_distance\": 1.67\n  },\n  {\n    \"year\": \"2022\",\n    \"month\": \"05\",\n    \"max_trip_distance\": 1.47\n  }\n]"
+    }
+  ],
+  "isError": false
+}
+
+-----
+ Query results from LLM generated SQL:
+
+ [
+  {
+    "year": "2022",
+    "month": "01",
+    "max_trip_distance": 306159.28
+  },
+  {
+    "year": "2021",
+    "month": "12",
+    "max_trip_distance": 21.13
+  },
+  {
+    "year": "2008",
+    "month": "12",
+    "max_trip_distance": 18.5
+  },
+  {
+    "year": "2009",
+    "month": "01",
+    "max_trip_distance": 16.71
+  },
+  {
+    "year": "2022",
+    "month": "02",
+    "max_trip_distance": 10.83
+  },
+  {
+    "year": "2022",
+    "month": "03",
+    "max_trip_distance": 2.88
+  },
+  {
+    "year": "2022",
+    "month": "04",
+    "max_trip_distance": 1.67
+  },
+  {
+    "year": "2022",
+    "month": "05",
+    "max_trip_distance": 1.47
+  }
+] -----
+
+Disconnected from MCP server
