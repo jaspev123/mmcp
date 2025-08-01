@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { Database } from 'duckdb-async';
 
+
 // Type definitions for better type safety
 interface TableInfo {
   table_name: string;
@@ -45,10 +46,13 @@ class DuckDBManager {
   }
 }
 
+const illegalSql = "```sql";
+
 // Create the MCP server
 const requirements = `
 Requirements:
-- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print any formatting.
+- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting 
+or new line characters.
 - Use proper DuckDB syntax and functions
 - Ensure the query is safe and well-formed
 - Consider performance implications
@@ -56,7 +60,8 @@ Requirements:
 - TO_CHAR" is not duckdb function
 - columns with aggregate functions must appear in the group by clause
 - DATE_FORMAT is not a duckdb function. use STRFTIME instead
-- Only include columns in SELECT that are either aggregated or listed in GROUP BY.
+- Only include columns in the SELECT list that are either aggregated or listed in GROUP BY when generating a
+with group by clause
 `;
 
 const server = new McpServer({
@@ -120,13 +125,15 @@ server.resource(
   }
 );
 
+
+
+
 server.tool(
   "execute-sql",
   "excute sql queries using known schema",
   {
     sql: z.string().describe("SQL query to execute against the DuckDB database"),
-    
-  },
+      },
   async ({ sql }) => {
     try {      
        
@@ -153,11 +160,41 @@ server.tool(
   }
 );
 
+/* server.tool(
+  "duckdb-functions",
+  "lists duckdb database functions to help generate correct sql",
+  {   
+  },
+  async () => {
+    try {      
+       
+      const getFunctionsSql = 
+      `SELECT function_name,description,function_type,examples,parameters,parameter_types,return_type 
+      FROM duckdb_functions()
+      order by function_name asc`;
+      
+      const pre_results = await duckDB.query(getFunctionsSql);
+      const results = convertBigInt(pre_results);
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify(results, null, 2)
+        }],
+        isError: false
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `SQL execution error: ${error}`
+        }],
+        isError: true
+      };
+    }
+  }
+); */
 
 
-
-
-const illegalSql = "```sql";
 
 const dummy ="";
 
@@ -192,17 +229,7 @@ ${schema || 'Use the database-schema resource to get current schema'}
 Question: ${question}
 
 Requirements:
-- Return only the SQL query, no explanation or formatting or any other text. return only the sql statement - not any other text. do not print "${illegalSql} or any other formatting 
-or new line characters.
-- Use proper DuckDB syntax and functions
-- Ensure the query is safe and well-formed
-- Consider performance implications
-- TO_VARCHAR" is not duckdb function
-- TO_CHAR" is not duckdb function
-- columns with aggregate functions must appear in the group by clause
-- DATE_FORMAT is not a duckdb function. use STRFTIME instead
-- Only include columns in the SELECT list that are either aggregated or listed in GROUP BY when generating a
-with group by clause
+${requirements}
 
 Finally: execute the generated SQL query using the a tool.
 `
@@ -211,47 +238,7 @@ Finally: execute the generated SQL query using the a tool.
   })
 );
 
-server.prompt(
-  "initial-instructions",
-  {
-    question: z.string().describe("Natural language question"),
-    schema: z.string().optional().describe("Database schema information. Obtain this using the database-schema resource"),
-    
-    
-  },
-  ({ question, schema }) => ({
-    messages: [{
-      role: "user",
-      content: {
-        type: "text",
-        text: `You are a SQL expert. Given the following database schema and question, generate a valid DuckDB SQL query.
 
-Database Schema:
-${schema || 'Use the database-schema resource to get current schema'}
-
-Question: ${question}
-
-      
-      SQL generation Requirements:      
-     
-      - Return only the sql statement as content- not any other text. do not print "${illegalSql} or any other formatting.
-      - Use proper DuckDB syntax and functions
-      - Ensure the query is safe and well-formed
-      - Consider performance implications
-      - TO_VARCHAR" is not duckdb function
-      - TO_CHAR" is not duckdb function
-      - columns with aggregate functions must appear in the group by clause
-      - DATE_FORMAT is not a duckdb function. use STRFTIME instead
-      - FORMAT_DATE is not a duckdb function. use STRFTIME instead     
-
-      ${duckDBDstrFunctionHelp}       
-                
-
-        `
-      }
-    }]
-  })
-);
 
 function extractSQL(rawText : string) {
   return rawText

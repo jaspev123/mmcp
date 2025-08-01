@@ -3,8 +3,9 @@ import { TextDecoder } from "util";
 import { Buffer } from 'buffer';
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { callOllamaLLJson, callOllamaLLJsonWithTools, callOllamaLLM, ChatMessage, OllamaLLMResponse, OllamaLLMResponseJSON, OllamaLLMResponseToolsMessage, OllamaLLMTool } from "./ollamaLLM";
+import { callOllamaLLMJsonWithTools, callOllamaLLM, ChatMessage, OllamaLLMResponse, OllamaLLMResponseJSON, OllamaLLMResponseToolsMessage, OllamaLLMTool } from "./ollamaLLM";
 import { text } from "express";
+import { any } from "zod";
 
 const modelId = "arn:aws:bedrock:eu-north-1:652477483543:inference-profile/eu.anthropic.claude-3-7-sonnet-20250219-v1:0";
 const bedrockClient = new BedrockRuntimeClient({ region: "eu-north-1" });
@@ -87,35 +88,30 @@ export class MCPDuckDBAgent {
             schema: schemaText                   
           }
         });
-
-        let doMoreWorkWithLLM = true;
-        
-        const finalText: string[] = [];
+        let doMoreWorkWithLLM = true;        
         let iloopCounter= 0;
-
         const messages: ChatMessage[] = [
           {
             role: "user",
             content: promptFromServer.messages[0].content.text,
           }
         ];
-        let currentMessages = [...messages];    
-
+        let currentMessages = [...messages];    //the LLM loop message that gets appended with tool calls and responses
+        //THE LLM LOOP
         while (doMoreWorkWithLLM) {                                  
             const response = await llmFunction(currentMessages, toolsResponse.tools);                         
-            currentMessages.push({
+             currentMessages.push({
               role: "assistant",
               content: response.message.content,
               ...(response.message.tool_calls && {
                 tool_calls: response.message.tool_calls
               })
-            });
-            console.log("\n Normal LLM call response: ", JSON.stringify(response.message, null, 2));
-            
+            });             
+            console.log("\n Normal LLM call response: ", JSON.stringify(response.message, null, 2));            
             if (!response.message.tool_calls || response.message.tool_calls.length === 0) {          
               return response.message.content;
             }
-            
+            // loop the tools calls if any
             for (const toolCall of response.message.tool_calls) {          
                 const toolName = toolCall.function.name;
                 let toolArgs = toolCall.function.arguments   
@@ -127,16 +123,14 @@ export class MCPDuckDBAgent {
                   };
                   toolArgs = toolArgsParam;
                 }
-                console.log("\n Tool Arguments for toolCall: ", toolArgs);
-                          
+                console.log("\n Tool Arguments for toolCall: ", toolArgs);                          
                 // Execute the MCP tool
                 const  toolResult = await this.mcpClient.callTool({
                   name: toolName,            
                   arguments: toolArgs
                 });
                 console.log(`Tool result for : ${toolName}`, JSON.stringify(toolResult, null, 2),"\n ");
-                const toolResultText = toolResult.content as { text: string }[];
-                
+                const toolResultText = toolResult.content as { text: string }[];                
                 // Add tool result as a tool message, this will be used as a context for the next LLM call
                 currentMessages.push({
                   role: "tool",
@@ -145,15 +139,13 @@ export class MCPDuckDBAgent {
               if(! toolResult.isError) {
                 doMoreWorkWithLLM = false;  // stop looping if model is not converging                
                 return toolResultText[0].text;
-              }
-              
+              }              
             }
             iloopCounter++;
             if (iloopCounter > 5) {
               doMoreWorkWithLLM = false;  // stop looping if model is not converging
               console.log("\n Looping stopped - model is not converging");
-            }
-            
+            }            
         }        
 
     } catch (error: any) {
@@ -166,10 +158,9 @@ export class MCPDuckDBAgent {
    async generateSQLWithOllamaLLM(messages :ChatMessage[], tools: any[]): Promise<any> {    
     const ollamaTools = await this.convertMcpToolsToOllama(tools);    
     //console.dir(messages, { depth: null, colors: true });
-    const result  : OllamaLLMResponseToolsMessage = await callOllamaLLJsonWithTools("llama3.2", messages, ollamaTools, this.ollmaContext);         
+    const result  : OllamaLLMResponseToolsMessage = await callOllamaLLMJsonWithTools("llama3.2", messages, ollamaTools, this.ollmaContext);         
     return result
   }
-
 
   
   async convertMcpToolsToOllama(tools: any[]): Promise<OllamaLLMTool[]> {    

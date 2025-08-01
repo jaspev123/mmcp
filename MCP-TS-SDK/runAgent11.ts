@@ -1,4 +1,4 @@
-import MCPDuckDBAgent from './mcp-duckdb-agent';
+import MCPDuckDBAgent from './duckdb-agent11';
 
 (async () => {
   const agent = new MCPDuckDBAgent();
