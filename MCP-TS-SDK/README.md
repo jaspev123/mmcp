@@ -3,7 +3,7 @@
 This project demonstrates different approaches to implementing the Model Context Protocol (MCP) with DuckDB database queries using AI agents. It includes three demo applications that showcase varying levels of MCP adoption and integration patterns.
 
 This demostration project code was for the most part created by AI tools(https://claude.ai/chat generated agen11 code  initially). The generated code was lacking 
-the LLM loop that is essential for intended functionality. The code was then modified by hand to add the LLM loop (agen22.ts & agent33.ts).
+the LLM loop that is essential for intended functionality. The code was then modified by hand to add the LLM loop (agent22.ts & agent33.ts).
 This readme.md was first created by Warp shell and then modified by hand.
 
 ## Prerequisites
@@ -100,7 +100,7 @@ The goal is that a LLM generates a SQL query that can be executed against the Du
 - **Characteristics**:
   - Uses MCP server to fetch database schema via resources
   - Retrieves pre-defined prompts from MCP server
-  - Executes SQL queries through MCP tools
+  - Executes SQL queries through MCP tools (not invoked by LLM)
   - Simple request-response pattern
   - Minimal AI agent autonomy
 
