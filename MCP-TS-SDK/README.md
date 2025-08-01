@@ -8,7 +8,7 @@ This readme.md was first created by Warp shell and then modified by hand.
 
 ## Prerequisites
 
-- Node.js (version 18 or higher)
+- Node.js (version v20.19.2 was used)
 - npm 
 - TypeScript
 - AWS Bedrock access (for Bedrock LLM integration)
