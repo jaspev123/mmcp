@@ -5,14 +5,35 @@
   "main": "dist/index.js",
   "scripts": {    
     "importdb": "tsx import-database-parquet.ts",
+    "importdb:debug": "node --inspect-brk -r tsx/cjs import-database-parquet.ts",
+    
     "agent11": "npx ts-node runAgent11",
+    "agent11:debug": "node --inspect-brk -r ts-node/register runAgent11.ts",
     "agent11:ollama": "npx ts-node runAgent11 ollama",
+    "agent11:ollama:debug": "node --inspect-brk -r ts-node/register runAgent11.ts ollama",
     "agent11:mcp": "npx ts-node runAgent11 MCP",
+    "agent11:mcp:debug": "node --inspect-brk -r ts-node/register runAgent11.ts MCP",
+    
     "agent22": "npx ts-node runAgent22",
+    "agent22:debug": "node --inspect-brk -r ts-node/register runAgent22.ts",
     "agent22:ollama": "npx ts-node runAgent22 ollama",
+    "agent22:ollama:debug": "node --inspect-brk -r ts-node/register runAgent22.ts ollama",
     "agent22:mcp": "npx ts-node runAgent22 MCP",
-    "agent33": "npx ts-node runAgent33",    
+    "agent22:mcp:debug": "node --inspect-brk -r ts-node/register runAgent22.ts MCP",
+    
+    "agent33": "npx ts-node runAgent33",
+    "agent33:debug": "node --inspect-brk -r ts-node/register runAgent33.ts",    
     "agent33:mcp": "npx ts-node runAgent33 MCP",
+    "agent33:mcp:debug": "node --inspect-brk -r ts-node/register runAgent33.ts MCP",
+    
+    "server44": "npx ts-node webserver44",
+    "server44:debug": "node --inspect-brk -r ts-node/register webserver44.ts",
+    "agent44": "npx ts-node runAgent44",
+    "agent44:debug": "node --inspect-brk -r ts-node/register runAgent44.ts",
+    "agent44:mcp": "npx ts-node runAgent44 MCP",
+    "agent44:mcp:debug": "node --inspect-brk -r ts-node/register runAgent44.ts MCP",
+    
+    "debug:any": "node --inspect-brk -r ts-node/register",
     "clean": "rm -rf dist"
   },
   "dependencies": {
