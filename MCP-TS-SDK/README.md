@@ -1,6 +1,6 @@
 # MCP-enabled DuckDB Query Demo Application
 
-This project demonstrates different approaches to implementing the Model Context Protocol (MCP) with DuckDB database queries using AI agents. It includes three demo applications that showcase varying levels of MCP adoption and integration patterns.
+This project demonstrates different approaches to implementing the Model Context Protocol (MCP) with DuckDB database queries using AI agents. It includes four demo applications that showcase varying levels of MCP adoption and integration patterns, including both stdio and HTTP transport implementations.
 
 This demostration project code was for the most part created by AI tools(https://claude.ai/chat generated agent11 code initially). The generated code was lacking 
 the LLM loop that is essential for intended MCP functionality. The code was then modified by hand to add the LLM loop (agent22.ts & agent33.ts).
@@ -94,13 +94,25 @@ npm run agent33
 npm run agent33:mcp
 ```
 
+#### Agent 44 (HTTP Transport Integration)
+```bash
+# Start the HTTP MCP server first (in one terminal)
+npm run server44
+
+# Then run the agent (in another terminal)
+npm run agent44
+
+# View available MCP resources, tools, and prompts
+npm run agent44:mcp
+```
+
 ## Demo Applications Overview
 
-The three demo applications demonstrate different levels of MCP (Model Context Protocol) adoption and implementation patterns:
-The apps are consiole applications and what they do can be observed in the console output. All apps send the same  end user prompt that is then 
+The four demo applications demonstrate different levels of MCP (Model Context Protocol) adoption and implementation patterns, including different transport mechanisms:
+The apps are console applications and what they do can be observed in the console output. All apps send the same end user prompt that is then 
 embedded into a larger prompt (by MCP server) and sent to the LLM. The LLM then generates a response that is sent back to the app.
 
-The goal is that a LLM generates a SQL query that can be executed against the DuckDB database. Finally the query results should be displeyed in the console.
+The goal is that a LLM generates a SQL query that can be executed against the DuckDB database. Finally the query results should be displayed in the console.
 
 ### Agent 11 - Basic MCP Integration
 **File**: `runAgent11.ts` / `duckdb-agent11.ts`
@@ -132,6 +144,7 @@ The goal is that a LLM generates a SQL query that can be executed against the Du
 
 - **MCP Level**: Advanced/Native Tool Integration
 - **Approach**: Native LLM tool calling with MCP tools
+- **Transport**: Stdio (StdioClientTransport/StdioServerTransport)
 - **Characteristics**:
   - Leverages native LLM tool calling capabilities (via Ollama)
   - Automatically converts MCP tools to LLM-compatible tool definitions
@@ -139,6 +152,21 @@ The goal is that a LLM generates a SQL query that can be executed against the Du
   - LLM autonomously decides when and how to use available tools
   - Most natural and flexible MCP integration
   - Supports iterative problem-solving with tool feedback loops
+
+### Agent 44 - HTTP Transport Integration
+**File**: `runAgent44.ts` / `duckdb-agent44.ts` / `duckdb-server44.ts`
+
+- **MCP Level**: Advanced/Native Tool Integration with HTTP Transport
+- **Approach**: Same as Agent 33 but with HTTP communication
+- **Transport**: HTTP (HTTPClientTransport/HTTPServerTransport)
+- **Characteristics**:
+  - Same advanced MCP integration as Agent 33
+  - Uses HTTP REST API for client-server communication
+  - Requires separate server process (duckdb-server44.ts)
+  - Server runs on http://localhost:3001
+  - Better suited for distributed architectures
+  - Enables web-based integrations and remote connections
+  - Network-based communication instead of process pipes
 
 ## Database Schema
 
@@ -154,9 +182,10 @@ The imported NYC taxi data (`tripdata` table) contains the following key columns
 ## MCP Server Components
 
 Each demo application connects to its corresponding MCP server:
-- `duckdb-server11` - Basic MCP server with resources and tools
-- `duckdb-server22` - Enhanced server supporting dynamic resource discovery
-- `duckdb-server33` - Advanced server with comprehensive tool definitions
+- `duckdb-server11` - Basic MCP server with resources and tools (Stdio transport)
+- `duckdb-server22` - Enhanced server supporting dynamic resource discovery (Stdio transport)
+- `duckdb-server33` - Advanced server with comprehensive tool definitions (Stdio transport)
+- `duckdb-server44` - HTTP-based server with same functionality as server33 (HTTP transport on port 3001)
 
 ## Environment Configuration
 
@@ -173,7 +202,10 @@ Install and run Ollama with the `llama3.2` model:
 
 ## Available Scripts
 
+### Database Setup
 - `npm run importdb` - Initialize DuckDB database with parquet data
+
+### Stdio Transport Agents (11, 22, 33)
 - `npm run agent11` - Run Agent 11 with Bedrock LLM
 - `npm run agent11:ollama` - Run Agent 11 with Ollama LLM
 - `npm run agent11:mcp` - Show MCP capabilities for Agent 11
@@ -183,6 +215,14 @@ Install and run Ollama with the `llama3.2` model:
 - `npm run agent33` - Run Agent 33 with Ollama LLM
 - `npm run agent33:mcp` - Show MCP capabilities for Agent 33
 
+### HTTP Transport (Agent 44)
+- `npm run server44` - Start HTTP MCP server on port 3001
+- `npm run agent44` - Run Agent 44 with HTTP transport (Ollama LLM)
+- `npm run agent44:mcp` - Show MCP capabilities for Agent 44
+
+### Debug Scripts
+All agents also have corresponding debug versions (e.g., `npm run agent44:debug`) for debugging with breakpoints.
+
 
 ## Architecture
 
@@ -191,8 +231,21 @@ The project demonstrates a progression from basic MCP usage to advanced AI agent
 1. **Level 1**: Traditional client-server MCP interaction
 2. **Level 2**: Guided agent with JSON-structured decision making
 3. **Level 3**: Native tool-calling integration with autonomous agent behavior
+4. **Level 4**: HTTP transport for distributed architectures
 
 Each level showcases different aspects of MCP capabilities and integration patterns, from simple resource consumption to sophisticated AI-driven tool orchestration.
+
+### Transport Mechanisms Comparison
+
+| Feature | Stdio Transport (Agents 11-33) | HTTP Transport (Agent 44) |
+|---------|--------------------------------|---------------------------|
+| **Communication** | Process pipes/stdin/stdout | HTTP REST API |
+| **Deployment** | Single process | Client-server architecture |
+| **Network** | Local only | Network-capable |
+| **Scalability** | Limited to local process | Distributed/remote capable |
+| **Use Cases** | Local integrations, development | Web apps, microservices, production |
+| **Complexity** | Lower | Higher (requires server management) |
+| **Debugging** | Simpler (single process) | More complex (multi-process) |
 
 ## Sample Query
 

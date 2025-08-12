@@ -81,8 +81,7 @@ mcpServer.resource(
   },
   
   async (uri) => {
-    try {
-      
+    try {      
       const schemaQuery = `
         SELECT
           table_name,
@@ -215,7 +214,7 @@ function convertBigInt(obj: any): any {
     await duckDB.close();
     process.exit(0);
   });
-  return {transport, mcpServer};
+  return {transport};
 }
 
 

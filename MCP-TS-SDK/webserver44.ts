@@ -5,11 +5,11 @@ const app = express();
 app.use(express.json());
 
 let transport : any;
-let mcpServer : any;
+
 
 (async () => {
   // Initialize MCP once at startup
-  ({ transport, mcpServer } = await createMcpServer());
+  ({ transport, } = await createMcpServer());
 
   app.post("/mcp", async (req, res) => {
     try {
