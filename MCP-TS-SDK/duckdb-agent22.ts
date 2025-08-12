@@ -70,13 +70,6 @@ export class MCPDuckDBAgent {
     }
     try {      
     
-/*       const toolsResponse = await this.mcpClient.listTools()
-      const available_tools = toolsResponse.tools.map(tool => ({
-          "name": tool.name,        
-          "input_schema": tool.inputSchema
-      }))   */
-
-
       const initialPrompt  = await this.mcpClient.getPrompt({
         name: "initial-instructions",
         arguments: {

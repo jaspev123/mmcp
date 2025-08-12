@@ -100,13 +100,18 @@ export class MCPDuckDBAgent {
         //THE LLM LOOP
         while (doMoreWorkWithLLM) {                                  
             const response = await llmFunction(currentMessages, toolsResponse.tools);                         
-             currentMessages.push({
+            const newMessage: { 
+              role: "assistant"; 
+              content: any; 
+              tool_calls?: any 
+            } = {
               role: "assistant",
-              content: response.message.content,
-              ...(response.message.tool_calls && {
-                tool_calls: response.message.tool_calls
-              })
-            });             
+              content: response.message.content
+            };            
+            if (response.message.tool_calls) {
+              newMessage.tool_calls = response.message.tool_calls;
+            }            
+            currentMessages.push(newMessage);            
             console.log("\n Normal LLM call response: ", JSON.stringify(response.message, null, 2));            
             if (!response.message.tool_calls || response.message.tool_calls.length === 0) {          
               return response.message.content;
