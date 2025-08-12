@@ -154,7 +154,19 @@ The goal is that a LLM generates a SQL query that can be executed against the Du
   - Supports iterative problem-solving with tool feedback loops
 
 ### Agent 44 - HTTP Transport Integration
-**File**: `runAgent44.ts` / `duckdb-agent44.ts` / `duckdb-server44.ts`
+**File**: `runAgent44.ts` / `duckdb-agent44.ts` / `duckdb-server44.ts` / `webserver44.ts`
+
+First run server with:
+
+```bash
+npm run server44
+```
+
+Then run agent (in separate terminal window) with:
+
+```bash
+npm run agent44
+```
 
 - **MCP Level**: Advanced/Native Tool Integration with HTTP Transport
 - **Approach**: Same as Agent 33 but with HTTP communication
@@ -178,6 +190,9 @@ The imported NYC taxi data (`tripdata` table) contains the following key columns
 - `total_amount` - Total charge to passengers
 - `PULocationID` / `DOLocationID` - Pickup/dropoff location IDs
 - And various other trip-related fields
+
+The sample query (bottom of this page) or some variants of it are defined runAgentX.ts files.
+The human defined question is expected to contain  relevant keywords (relative to schema) that are used to generate the SQL query.
 
 ## MCP Server Components
 
