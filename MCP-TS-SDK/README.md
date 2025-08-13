@@ -7,7 +7,7 @@ the LLM loop that is essential for intended MCP functionality. The code was then
 This readme.md was first created by Warp terminal and then modified by hand.
 
 The prompt in Warp terminal to generate the initial version of this readme.md was: 
-"generate me a readme.md that describes how run the build script in package.json. Also add short description how the 3 demo apps differ in their level of MCP adoption. Also describe how the duckdb database is initialised."
+"generate me a readme.md that describes how run the build script in package.json. Also add short description how the 4 demo apps differ in their level of MCP adoption. Also describe how the duckdb database is initialised."
 
 
 ## Prerequisites
