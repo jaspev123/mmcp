@@ -4,9 +4,9 @@ This project demonstrates different approaches to implementing the Model Context
 
 This demostration project code was for the most part created by AI tools(https://claude.ai/chat generated agent11 code initially). The generated code was lacking 
 the LLM loop that is essential for intended MCP functionality. The code was then modified by hand to add the LLM loop (agent22.ts & agent33.ts).
-This readme.md was first created by Warp shell and then modified by hand.
+This readme.md was first created by Warp terminal and then modified by hand.
 
-The prompt to generate the initial version of this readme.md was: 
+The prompt in Warp terminal to generate the initial version of this readme.md was: 
 "generate me a readme.md that describes how run the build script in package.json. Also add short description how the 3 demo apps differ in their level of MCP adoption. Also describe how the duckdb database is initialised."
 
 
