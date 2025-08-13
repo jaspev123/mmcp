@@ -127,7 +127,7 @@ export class MCPDuckDBAgent {
                   };
                   toolArgs = toolArgsParam;
                 }
-                console.log("\n Tool Arguments for toolCall: ", toolArgs);                          
+                //console.log("\n Tool Arguments for toolCall: ", toolArgs);                          
                 // Execute the MCP tool
                 const  toolResult = await this.mcpClient.callTool({
                   name: toolName,            
