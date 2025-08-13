@@ -21,5 +21,5 @@ let transport : any;
   });
 
   // Start the HTTP server
-  app.listen(3001, () => console.log("MCP HTTP server listening on port 3001"));
+  app.listen(3001, "127.0.0.1", () => console.log("MCP HTTP server listening on port 3001"));
 })();
