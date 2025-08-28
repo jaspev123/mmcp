@@ -43,6 +43,15 @@ export class MCPDuckDBAgent {
     });
     // Initialize HTTP transport for MCP server instead of stdio
     this.mcpTransport = new StreamableHTTPClientTransport(new URL("http://localhost:3001/mcp"));
+
+/*     this.mcpTransport = new StreamableHTTPClientTransport(
+      new URL("http://localhost:3001/mcp"),
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,  ///FROM CONSTRUCTOR: constructor(token)
+        },
+      }
+    ); */
   }
 
   async initialize(): Promise<void> {

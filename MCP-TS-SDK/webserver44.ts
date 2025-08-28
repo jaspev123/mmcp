@@ -14,6 +14,18 @@ let transport : any;
   app.post("/mcp", async (req, res) => {
     try {
       await transport.handleRequest(req, res, req.body);
+
+/*       const authHeader = req.headers["authorization"];
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+  
+      const token = authHeader.split(" ")[1];
+      // TODO: validate token against your OAuth2.1 provider or JWKS
+      if (token !== process.env.EXPECTED_TOKEN) {
+        return res.status(403).json({ error: "Forbidden" });
+      } */
     } catch (err) {
       console.error("Error handling MCP request:", err);
       res.status(500).send("Internal Server Error");
